@@ -1,5 +1,4 @@
 import abc
-from tokenize import triple_quoted
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -27,10 +26,11 @@ class BaseModel(models.Model):
         field_key = self.__class__._meta.get_field(relationship_field).attname
         return field.as_dict() if field else getattr(self, field_key)
 
-    def timestamps_dict(self):
+    def id_timestamps_dict(self):
         return {
-            "created_at": self.created_at,
-            "updated_at": self.created_at,
+            "id": self.pk if self.pk else None,
+            "created_at": str(self.created_at) if self.created_at else None,
+            "updated_at": str(self.updated_at) if self.updated_at else None,
         }
 
 
@@ -55,7 +55,7 @@ class Question(BaseModel):
     def as_dict(self):
         return {
             **model_to_dict(self),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -69,7 +69,7 @@ class Answer(BaseModel):
             "question": self.dict_from_relationship_field("question"),
             "answer": self.answer,
             "is_correct": self.is_correct,
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -82,7 +82,7 @@ class Pack(BaseModel):
     def as_dict(self):
         return {
             **model_to_dict(self),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -94,7 +94,7 @@ class QuestionPack(BaseModel):
         return {
             "question": self.dict_from_relationship_field("question"),
             "pack": self.dict_from_relationship_field("pack"),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -107,7 +107,7 @@ class Team(BaseModel):
     def as_dict(self):
         return {
             **model_to_dict(self),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
     def has_member(self, member_id: int):
@@ -143,7 +143,7 @@ class Member(BaseModel):
     def as_dict(self):
         return {
             **model_to_dict(self),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -160,6 +160,7 @@ class GameEvent(BaseModel):
 
     inning = models.ForeignKey("game.Inning", on_delete=models.CASCADE, related_name="events")
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="events")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="events")
     type = models.CharField(
         max_length=3,
         choices=EventType,
@@ -173,7 +174,7 @@ class GameEvent(BaseModel):
             "inning": self.dict_from_relationship_field("inning"),
             "member": self.dict_from_relationship_field("member"),
             "type": self.EventType[self.type],
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -213,7 +214,10 @@ class Game(BaseModel):
             "team1": self.dict_from_relationship_field("team1"),
             "team2": self.dict_from_relationship_field("team2"),
             "timer_seconds": self.timer_seconds,
-            **self.timestamps_dict()
+            "innings": [
+                inning.as_dict() for inning in self.innings.all() if self.innings
+            ],
+            **self.id_timestamps_dict()
         }
 
     def get_current_inning(self):
@@ -234,6 +238,7 @@ class Game(BaseModel):
         game_event = GameEvent.objects.create(
             member=member,
             inning=current_inning,
+            question=answer.question,
             type=self.get_event_type(answer)
         )
 
@@ -242,7 +247,7 @@ class Game(BaseModel):
         return game_event
 
     def update_game(self, game_event: GameEvent):
-        produced_careers = self.get_produced_careers()
+        produced_careers = self.get_produced_careers(game_event.inning)
 
         if self.team1.has_member(game_event.member_id):
             game_event.inning.careers_team1 = produced_careers
@@ -261,18 +266,16 @@ class Game(BaseModel):
         hitters_stack = [0, 0, 0, 0]
         index = 0
         for event in inning.events.all():
+            if event.type == GameEvent.EventType.OUT: continue
+
             movements = self.TYPES_MOVEMENTS_MAP[event.type]
             hitters_stack[index] = movements
-            print(f'movements: {movements}')
-            print(f'hitters_stack: {hitters_stack}')
 
             # add up movements to base runners
             for i in range(index - 1, -1, -1):
-                print(f'i: {i}')
                 if i < 0: continue
 
                 hitters_stack[i] += movements if hitters_stack[i] else 0
-                print(f'hitters_stack: {hitters_stack}')
 
             # count careers
             for j in range(0, 4):
@@ -346,7 +349,7 @@ class TeamMember(BaseModel):
             "team": self.dict_from_relationship_field("team"),
             "member": self.dict_from_relationship_field("member"),
             "game": self.dict_from_relationship_field("game"),
-            **self.timestamps_dict()
+            **self.id_timestamps_dict()
         }
 
 
@@ -373,10 +376,14 @@ class Inning(BaseModel):
 
     def as_dict(self):
         return {
-            "team": self.dict_from_relationship_field("team"),
-            "member": self.dict_from_relationship_field("member"),
-            "game": self.dict_from_relationship_field("game"),
-            **self.timestamps_dict()
+            "number": self.number,
+            "hits_team1": self.hits_team1,
+            "hits_team2": self.hits_team2,
+            "outs_team1": self.outs_team1,
+            "outs_team2": self.outs_team2,
+            "careers_team1": self.careers_team1,
+            "careers_team2": self.careers_team2,
+            **self.id_timestamps_dict()
         }
 
     def is_over(self):

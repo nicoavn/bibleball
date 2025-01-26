@@ -1,6 +1,8 @@
+import random
+
 from django.http import HttpResponse, JsonResponse
 
-from game.models import Game, Team, TeamMember, Member, Answer
+from game.models import Game, Team, TeamMember, Member, Answer, Pack, QuestionPack
 
 
 def index(request):
@@ -8,37 +10,40 @@ def index(request):
 
 
 def start_game(request):
-    game_id = request.get("pack_id", None)
-    pack_id = request.get("pack_id", None)
-    timer_seconds = request.get("timer_seconds", None)
+    game_id = request.GET.get("game_id", None)
+    pack_id = request.GET.get("pack_id", None)
+    timer_seconds = request.GET.get("timer_seconds", 30)
 
-    if not pack_id:
-        return HttpResponse("No pack id provided.", status=400)
+    pack = None
+    try:
+        pack = Pack.objects.get(id=pack_id)
+    except Pack.DoesNotExist:
+        pass
 
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
+        if not pack:
+            return HttpResponse("No pack id provided.", status=400)
         team1 = Team.objects.create(
             name="Team 1",
         )
         team2 = Team.objects.create(
             name="Team 2",
         )
-        game = Game(
+        game = Game.objects.create(
             timer_seconds=timer_seconds,
             team1=team1,
             team2=team2,
-            pack_id=pack_id,
+            pack=pack,
         )
-
-
 
     return JsonResponse(game.as_dict())
 
 
 def add_team(request):
-    name = request.get("name", None)
-    team_id = request.get("team_id", None)
+    name = request.GET.get("name", None)
+    team_id = request.GET.get("team_id", None)
 
     try:
         team = Team.objects.get(id=team_id)
@@ -51,17 +56,17 @@ def add_team(request):
     team.name = name
     team.save()
 
-    return JsonResponse({"ok": 1})
+    return JsonResponse(team.as_dict())
 
 
 def add_member(request):
-    name = request.get("name", None)
-    nickname = request.get("nickname", None)
-    order = request.get("order", None)
-    jersey_no = request.get("jersey_no", None)
-    position = request.get("position", None)
-    team_id = request.get("team_id", None)
-    game_id = request.get("game_id", None)
+    name = request.GET.get("name", None)
+    nickname = request.GET.get("nickname", None)
+    order = request.GET.get("order", None)
+    jersey_no = request.GET.get("jersey_no", None)
+    position = request.GET.get("position", None)
+    team_id = request.GET.get("team_id", None)
+    game_id = request.GET.get("game_id", None)
 
     try:
         team = Team.objects.get(id=team_id)
@@ -93,29 +98,59 @@ def add_member(request):
     return JsonResponse(team_member.as_dict())
 
 
-def pitch_question(request):
-    game_id = request.get("game_id", None)
+def get_next_hitter(request):
+    game_id = request.GET.get("game_id", None)
 
     try:
-        game = Game.objects.get(id=game_id).prefetch_related("pack__question_packs__question__answers")
+        game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
         return HttpResponse("Invalid game.", status=400)
 
-    question_packs = game.pack.question_packs.all()
+    next_hitter = game.get_next_hitter()
 
-    questions_dicts = [qp.question.as_dict() for qp in question_packs]
+    return JsonResponse(next_hitter.as_dict())
 
-    context = {
-        "questions": questions_dicts,
+def pitch_question(request):
+    game_id = request.GET.get("game_id", None)
+
+    try:
+        game = Game.objects.filter(
+            id=game_id
+        ).prefetch_related(
+            "pack__question_packs__question__answers"
+        ).first()
+    except Game.DoesNotExist:
+        return HttpResponse("Invalid game.", status=400)
+
+    used_questions = {
+        question_id
+        for question_id in (
+            filter(
+                lambda q: bool(1),
+                Game.objects.filter(pk=game_id)
+                .values_list("innings__events__question_id", flat=True)
+            )
+        )
     }
 
-    return JsonResponse(context)
+    question_packs = QuestionPack.objects.filter(
+        pack=game.pack,
+    ).exclude(
+        question_id__in=used_questions
+    ).prefetch_related("question__answers")
+
+    if not question_packs:
+        return HttpResponse("No available questions found.", status=400)
+
+    question_pack = random.choice(question_packs)
+
+    return JsonResponse(question_pack.question.as_dict())
 
 
 def check_answer(request):
-    answer_id = request.get("answer_id", None)
-    game_id = request.get("game_id", None)
-    member_id = request.get("member_id", None)
+    answer_id = request.GET.get("answer_id", None)
+    game_id = request.GET.get("game_id", None)
+    member_id = request.GET.get("member_id", None)
 
     try:
         game = Game.objects.get(id=game_id)
@@ -137,11 +172,22 @@ def check_answer(request):
     return JsonResponse(game.as_dict())
 
 
-def get_game(request):
-    return JsonResponse({"ok": 1})
-
-
 def get_game_board(request):
-    return JsonResponse({"ok": 1})
+    board = {}
 
+    game_id = request.GET.get("game_id", None)
 
+    try:
+        game = Game.objects.filter(
+            id=game_id
+        ).prefetch_related(
+            "innings__events",
+            "team1",
+            "team2",
+        ).first()
+    except Game.DoesNotExist:
+        return HttpResponse("Invalid game.", status=400)
+
+    board["game"] = game.as_dict()
+
+    return JsonResponse(board)
