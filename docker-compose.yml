@@ -31,14 +31,17 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    command: python app/main.py
+    entrypoint: "/docker-entrypoint.sh"
     tty: true
     volumes:
       - ./backend:/backend/:cached
       - ./.docker/.ipython:/root/.ipython:cached
     environment:
       PYTHONPATH: .
-      DATABASE_URL: "postgresql+asyncpg://bibleball_user:bibleball_password@postgres:5432/bibleball_db"
+      DB_NAME: bibleball_db
+      DB_USER: bibleball_user
+      DB_PASSWORD: bibleball_password
+      DB_HOST: postgres
     depends_on:
       - "postgres"
     ports:
