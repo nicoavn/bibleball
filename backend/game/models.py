@@ -55,12 +55,12 @@ class Question(BaseModel):
     def as_dict(self, include_answers=False):
         return {
             **model_to_dict(self),
-            **self.id_timestamps_dict(),
             **(
                 {"answers": [answer.as_dict() for answer in self.answers.all()]}
                 if include_answers
                 else {}
             ),
+            **self.id_timestamps_dict(),
         }
 
 
@@ -79,12 +79,12 @@ class Answer(BaseModel):
         return {
             "answer": self.answer,
             "is_correct": self.is_correct,
-            **self.id_timestamps_dict(),
             **(
                 {"question": self.dict_from_relationship_field("question")}
                 if include_question
                 else {"question_id": self.question_id}
             ),
+            **self.id_timestamps_dict(),
         }
 
 
@@ -94,8 +94,21 @@ class Pack(BaseModel):
     def __str__(self):
         return self.name
 
-    def as_dict(self):
-        return {**model_to_dict(self), **self.id_timestamps_dict()}
+    def as_dict(self, include_questions=False):
+        return {
+            **model_to_dict(self),
+            **(
+                {
+                    "questions": [
+                        question_pack.question.as_dict()
+                        for question_pack in self.question_packs.all()
+                    ]
+                }
+                if include_questions
+                else {}
+            ),
+            **self.id_timestamps_dict(),
+        }
 
 
 class QuestionPack(BaseModel):

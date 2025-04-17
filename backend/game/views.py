@@ -198,5 +198,10 @@ def get_game_board(request):
         return HttpResponse("Invalid game.", status=400)
 
     board["game"] = game.as_dict()
+    board["next_hitter"] = game.get_next_hitter().as_dict()
 
     return JsonResponse(board)
+
+
+def get_packs(request):
+    return JsonResponse({"packs": [pack.as_dict() for pack in Pack.objects.all()]})

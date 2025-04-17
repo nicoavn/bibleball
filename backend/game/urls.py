@@ -9,4 +9,5 @@ urlpatterns = [
     path("check-answer", views.check_answer, name="check_answer"),
     path("next-hitter", views.get_next_hitter, name="get_next_hitter"),
     path("board", views.get_game_board, name="get_game_board"),
+    path("packs", views.get_packs, name="get_packs"),
 ]

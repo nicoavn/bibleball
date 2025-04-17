@@ -25,8 +25,9 @@ SECRET_KEY = "django-insecure-p$6@=v-lptf^psm&07du&^ld_4$&l_=843$&dfe1ho8y#w-vnm
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
 
 # Application definition
 
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "game.apps.GameConfig",
 ]
 
@@ -48,6 +50,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -76,12 +80,12 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     "default": {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'bibleball_db'),
-        'USER': os.environ.get('DB_USER', 'bibleball_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'bibleball_password'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': '5432'
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME", "bibleball_db"),
+        "USER": os.environ.get("DB_USER", "bibleball_user"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "bibleball_password"),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": "5432",
     }
 }
 
