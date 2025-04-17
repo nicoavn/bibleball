@@ -115,11 +115,11 @@ def pitch_question(request):
     game_id = request.GET.get("game_id", None)
 
     try:
-        game = Game.objects.filter(
-            id=game_id
-        ).prefetch_related(
-            "pack__question_packs__question__answers"
-        ).first()
+        game = (
+            Game.objects.filter(id=game_id)
+            .prefetch_related("pack__question_packs__question__answers")
+            .first()
+        )
     except Game.DoesNotExist:
         return HttpResponse("Invalid game.", status=400)
 
@@ -128,17 +128,20 @@ def pitch_question(request):
         for question_id in (
             filter(
                 lambda q: bool(1),
-                Game.objects.filter(pk=game_id)
-                .values_list("innings__events__question_id", flat=True)
+                Game.objects.filter(pk=game_id).values_list(
+                    "innings__events__question_id", flat=True
+                ),
             )
         )
     }
 
-    question_packs = QuestionPack.objects.filter(
-        pack=game.pack,
-    ).exclude(
-        question_id__in=used_questions
-    ).prefetch_related("question__answers")
+    question_packs = (
+        QuestionPack.objects.filter(
+            pack=game.pack,
+        )
+        .exclude(question_id__in=used_questions)
+        .prefetch_related("question__answers")
+    )
 
     if not question_packs:
         return HttpResponse("No available questions found.", status=400)
@@ -168,7 +171,10 @@ def check_answer(request):
     except Answer.DoesNotExist:
         return HttpResponse("Invalid answer.", status=400)
 
-    game.submit_answer(answer, member)
+    try:
+        game.submit_answer(answer, member)
+    except Exception as e:
+        return HttpResponse(str(e), status=400)
 
     return JsonResponse(game.as_dict())
 
@@ -179,13 +185,15 @@ def get_game_board(request):
     game_id = request.GET.get("game_id", None)
 
     try:
-        game = Game.objects.filter(
-            id=game_id
-        ).prefetch_related(
-            "innings__events",
-            "team1",
-            "team2",
-        ).first()
+        game = (
+            Game.objects.filter(id=game_id)
+            .prefetch_related(
+                "innings__events",
+                "team1",
+                "team2",
+            )
+            .first()
+        )
     except Game.DoesNotExist:
         return HttpResponse("Invalid game.", status=400)
 

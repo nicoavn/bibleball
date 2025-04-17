@@ -71,6 +71,10 @@ class Answer(BaseModel):
     answer = models.CharField(max_length=250)
     is_correct = models.BooleanField(default=False)
 
+    def __str__(self):
+        correctness_string = "Correct" if self.is_correct else "Incorrect"
+        return f"{self.question}: {self.answer} ({correctness_string})"
+
     def as_dict(self, include_question=False):
         return {
             "answer": self.answer,
@@ -142,6 +146,7 @@ class Member(BaseModel):
         FB = "1B", _("First Base")
         SB = "2B", _("Second Base")
         TB = "3B", _("Third Base")
+        SS = "SS", _("Shortstop")
         C = "C", _("Catcher")
         LF = "LF", _("Left Field")
         CF = "CF", _("Center Field")
@@ -159,7 +164,7 @@ class Member(BaseModel):
     )
 
     def __str__(self):
-        return self.name
+        return f"[{self.jersey_no or 0}] {self.name} ({self.nickname})"
 
     def as_dict(self):
         return {**model_to_dict(self), **self.id_timestamps_dict()}
@@ -226,8 +231,9 @@ class Game(BaseModel):
     total_innings = models.IntegerField(default=9)
 
     def __str__(self):
+        game_result_string = ""
+
         if self.is_over():
-            game_result_string = ""
             if self.runs_count(self.team1) == self.runs_count(self.team2):
                 game_result_string = " - Game tied"
             else:
@@ -237,7 +243,7 @@ class Game(BaseModel):
                     else self.team1
                 )
                 game_result_string = f" [{winner_team} won]"
-            date_string = self.created_at.strftime("%a %d/%m/%Y")
+        date_string = self.created_at.strftime("%a %d/%m/%Y")
         return f"{self.team1} vs {self.team2}: {date_string}{game_result_string}"
 
     def as_dict(self):
@@ -272,6 +278,9 @@ class Game(BaseModel):
         if not current_inning:
             raise Exception("No inning started.")
 
+        if member != (current_hitter := self.get_next_hitter()):
+            raise Exception(f"Not current hitter: {current_hitter}")
+
         game_event = GameEvent.objects.create(
             member=member,
             inning=current_inning,
@@ -286,22 +295,16 @@ class Game(BaseModel):
     def update_game(self, game_event: GameEvent):
         produced_careers = self.get_produced_careers(game_event.inning)
 
+        hit = 1 if game_event.type != GameEvent.EventType.OUT else 0
+        out = 1 if game_event.type == GameEvent.EventType.OUT else 0
         if self.team1.has_member(game_event.member_id):
             game_event.inning.careers_team1 = produced_careers
-            game_event.inning.hits_team1 += (
-                1 if game_event.type != GameEvent.EventType.OUT else 0
-            )
-            game_event.inning.outs_team1 += (
-                1 if game_event.type == GameEvent.EventType.OUT else 0
-            )
+            game_event.inning.hits_team1 += hit
+            game_event.inning.outs_team1 += out
         else:
             game_event.inning.careers_team2 = produced_careers
-            game_event.inning.hits_team2 += (
-                1 if game_event.type != GameEvent.EventType.OUT else 0
-            )
-            game_event.inning.outs_team2 += (
-                1 if game_event.type == GameEvent.EventType.OUT else 0
-            )
+            game_event.inning.hits_team2 += hit
+            game_event.inning.outs_team2 += out
 
         game_event.inning.save()
 
@@ -395,6 +398,9 @@ class TeamMember(BaseModel):
             )
         ]
         ordering = ["order"]
+
+    def __str__(self):
+        return f"{self.team.name}: {self.order} - {self.member.name}"
 
     def as_dict(self):
         return {
