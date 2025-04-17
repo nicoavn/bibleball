@@ -1,6 +1,6 @@
+import json
 import random
 
-import pytest
 from django.test import TestCase
 from freezegun import freeze_time
 
@@ -155,18 +155,15 @@ class GameTestCase(TestCase):
                 )
             self.assertEqual(produced_careers, game.get_produced_careers(inning))
 
-    def test_turns(self):
-        pytest.skip("Implement")
-
     @freeze_time("2020-12-12 14:00:00")
     def test_start_game(self):
         response = self.client.get('/game/start', {"pack_id": self.pack.pk})
         self.assertEqual(response.status_code, 200)
 
         game_dict = response.json()
-        game_dict.pop('id')
-        game_dict['team1'].pop('id')
-        game_dict['team2'].pop('id')
+        self.assertGreater(game_dict.pop('id'), 0)
+        self.assertGreater(game_dict['team1'].pop('id'), 0)
+        self.assertGreater(game_dict['team2'].pop('id'), 0)
 
         self.assertDictEqual(
             game_dict,
@@ -174,15 +171,18 @@ class GameTestCase(TestCase):
                 "pack": self.pack.as_dict(),
                 "team1": {
                     'created_at': '2020-12-12 14:00:00+00:00',
+                    'members': [],
                     'name': 'Team 1',
                     'updated_at': '2020-12-12 14:00:00+00:00'
                 },
                 "team2": {
                     'created_at': '2020-12-12 14:00:00+00:00',
+                    'members': [],
                     'name': 'Team 2',
                     'updated_at': '2020-12-12 14:00:00+00:00'
                 },
                 "timer_seconds": 30,
+                "innings": [],
                 "created_at": '2020-12-12 14:00:00+00:00',
                 "updated_at": '2020-12-12 14:00:00+00:00',
             }
@@ -206,7 +206,7 @@ class GameTestCase(TestCase):
         self.assertIn(question_dict.get("id"), self.game.pack.question_packs.values_list("question_id", flat=True))
 
     def test_get_next_hitter(self):
-        members = [tm.member for tm in self.team1.teammember_set.all()]
+        members = list(self.team1.members.all())
         member1 = members[0]
         member2 = members[1]
 
@@ -234,7 +234,7 @@ class GameTestCase(TestCase):
             {
                 "answer_id": self.answer1a.pk,
                 "game_id": self.game.pk,
-                "member_id": self.game.team1.teammember_set.first().pk,
+                "member_id": self.game.team1.members.first().pk,
             }
         )
         self.assertEqual(response.status_code, 200)
@@ -251,7 +251,7 @@ class GameTestCase(TestCase):
             {
                 "answer_id": self.answer1b.pk,
                 "game_id": self.game.pk,
-                "member_id": self.game.team1.teammember_set.first().pk,
+                "member_id": self.game.team1.members.first().pk,
             }
         )
         self.assertEqual(response.status_code, 200)
@@ -263,6 +263,29 @@ class GameTestCase(TestCase):
         )
 
     def test_get_game_board(self):
+        current_inning = self.game.get_current_inning()
+        members = list(self.game.team1.members.all())
+        member1 = members.pop()
+        member2 = members.pop()
+        member3 = members.pop()
+        GameEvent.objects.create(
+            member=member1,
+            inning=current_inning,
+            question=Question.objects.create(question="dummy question?"),
+            type=GameEvent.EventType.H1,
+        )
+        GameEvent.objects.create(
+            member=member2,
+            inning=current_inning,
+            question=Question.objects.create(question="dummy question?"),
+            type=GameEvent.EventType.H1,
+        )
+        GameEvent.objects.create(
+            member=member3,
+            inning=current_inning,
+            question=Question.objects.create(question="dummy question?"),
+            type=GameEvent.EventType.OUT,
+        )
         response = self.client.get(
             '/game/board',
             {
@@ -270,6 +293,7 @@ class GameTestCase(TestCase):
             }
         )
         self.assertEqual(response.status_code, 200)
+        print(json.dumps(self.game.as_dict(), indent=4, sort_keys=True))
         self.assertDictEqual(
             response.json(),
             {

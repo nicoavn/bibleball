@@ -52,24 +52,35 @@ class Question(BaseModel):
     def __str__(self):
         return self.question
 
-    def as_dict(self):
+    def as_dict(self, include_answers=False):
         return {
             **model_to_dict(self),
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
+            **(
+                {"answers": [answer.as_dict() for answer in self.answers.all()]}
+                if include_answers
+                else {}
+            ),
         }
 
 
 class Answer(BaseModel):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="answers"
+    )
     answer = models.CharField(max_length=250)
     is_correct = models.BooleanField(default=False)
 
-    def as_dict(self):
+    def as_dict(self, include_question=False):
         return {
-            "question": self.dict_from_relationship_field("question"),
             "answer": self.answer,
             "is_correct": self.is_correct,
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
+            **(
+                {"question": self.dict_from_relationship_field("question")}
+                if include_question
+                else {"question_id": self.question_id}
+            ),
         }
 
 
@@ -80,39 +91,43 @@ class Pack(BaseModel):
         return self.name
 
     def as_dict(self):
-        return {
-            **model_to_dict(self),
-            **self.id_timestamps_dict()
-        }
+        return {**model_to_dict(self), **self.id_timestamps_dict()}
 
 
 class QuestionPack(BaseModel):
-    pack = models.ForeignKey(Pack, on_delete=models.CASCADE, related_name="question_packs")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="question_packs")
+    pack = models.ForeignKey(
+        Pack, on_delete=models.CASCADE, related_name="question_packs"
+    )
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="question_packs"
+    )
 
     def as_dict(self):
         return {
             "question": self.dict_from_relationship_field("question"),
             "pack": self.dict_from_relationship_field("pack"),
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
         }
 
 
 class Team(BaseModel):
     name = models.CharField(max_length=250)
+    members = models.ManyToManyField(
+        "Member", through="TeamMember", related_name="teams"
+    )
 
     def __str__(self):
         return self.name
 
     def as_dict(self):
         return {
-            **model_to_dict(self),
-            **self.id_timestamps_dict()
+            "name": self.name,
+            "members": [m.as_dict() for m in self.members.all() if self.members],
+            **self.id_timestamps_dict(),
         }
 
     def has_member(self, member_id: int):
-        member_ids = {tm.member_id for tm in self.teammember_set.all()}
-        return member_id in member_ids
+        return self.members.filter(id=member_id).exists()
 
 
 class Member(BaseModel):
@@ -141,10 +156,7 @@ class Member(BaseModel):
         return self.name
 
     def as_dict(self):
-        return {
-            **model_to_dict(self),
-            **self.id_timestamps_dict()
-        }
+        return {**model_to_dict(self), **self.id_timestamps_dict()}
 
 
 class GameEvent(BaseModel):
@@ -156,11 +168,15 @@ class GameEvent(BaseModel):
         OUT = "OUT", _("Out")
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ["created_at"]
 
-    inning = models.ForeignKey("game.Inning", on_delete=models.CASCADE, related_name="events")
+    inning = models.ForeignKey(
+        "game.Inning", on_delete=models.CASCADE, related_name="events"
+    )
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="events")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="events")
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="events"
+    )
     type = models.CharField(
         max_length=3,
         choices=EventType,
@@ -174,7 +190,7 @@ class GameEvent(BaseModel):
             "inning": self.dict_from_relationship_field("inning"),
             "member": self.dict_from_relationship_field("member"),
             "type": self.EventType[self.type],
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
         }
 
 
@@ -195,18 +211,28 @@ class Game(BaseModel):
 
     pack = models.ForeignKey(Pack, on_delete=models.CASCADE, related_name="games")
     timer_seconds = models.IntegerField(default=30)
-    team1 = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="games_as_team1")
-    team2 = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="games_as_team2")
+    team1 = models.ForeignKey(
+        Team, on_delete=models.CASCADE, related_name="games_as_team1"
+    )
+    team2 = models.ForeignKey(
+        Team, on_delete=models.CASCADE, related_name="games_as_team2"
+    )
     total_innings = models.IntegerField(default=9)
 
     def __str__(self):
-        winner_team = None
         if self.is_over():
-            if self.runs_count(self.team1) > self.runs_count(self.team2):
-                winner_team = self.team1
-            elif self.runs_count(self.team2) > self.runs_count(self.team1):
-                winner_team = self.team2
-        return f"{self.team1} vs {self.team2}: {self.created_at}" + f" [{winner_team}]" if winner_team else ""
+            game_result_string = ""
+            if self.runs_count(self.team1) == self.runs_count(self.team2):
+                game_result_string = " - Game tied"
+            else:
+                winner_team = (
+                    self.team2
+                    if self.runs_count(self.team2) > self.runs_count(self.team1)
+                    else self.team1
+                )
+                game_result_string = f" [{winner_team} won]"
+            date_string = self.created_at.strftime("%a %d/%m/%Y")
+        return f"{self.team1} vs {self.team2}: {date_string}{game_result_string}"
 
     def as_dict(self):
         return {
@@ -217,17 +243,22 @@ class Game(BaseModel):
             "innings": [
                 inning.as_dict() for inning in self.innings.all() if self.innings
             ],
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
         }
 
     def get_current_inning(self):
         if self.is_over():
             return None
-        try:
-            inning = self.innings.last()
-            return None if inning.is_over() else inning
-        except IndexError:
-            return None
+
+        inning = self.innings.last()
+        if not inning or (inning and inning.is_over()):
+            return self.generate_next_inning(inning)
+
+        return inning
+
+    def generate_next_inning(self, last_inning=None):
+        number = last_inning.number + 1 if last_inning else 1
+        return Inning.objects.create(game=self, number=number)
 
     def submit_answer(self, answer: Answer, member: Member) -> GameEvent:
         current_inning = self.get_current_inning()
@@ -239,7 +270,7 @@ class Game(BaseModel):
             member=member,
             inning=current_inning,
             question=answer.question,
-            type=self.get_event_type(answer)
+            type=self.get_event_type(answer),
         )
 
         self.update_game(game_event)
@@ -251,12 +282,20 @@ class Game(BaseModel):
 
         if self.team1.has_member(game_event.member_id):
             game_event.inning.careers_team1 = produced_careers
-            game_event.inning.hits_team1 += 1 if game_event.type != GameEvent.EventType.OUT else 0
-            game_event.inning.outs_team1 += 1 if game_event.type == GameEvent.EventType.OUT else 0
+            game_event.inning.hits_team1 += (
+                1 if game_event.type != GameEvent.EventType.OUT else 0
+            )
+            game_event.inning.outs_team1 += (
+                1 if game_event.type == GameEvent.EventType.OUT else 0
+            )
         else:
             game_event.inning.careers_team2 = produced_careers
-            game_event.inning.hits_team2 += 1 if game_event.type != GameEvent.EventType.OUT else 0
-            game_event.inning.outs_team2 += 1 if game_event.type == GameEvent.EventType.OUT else 0
+            game_event.inning.hits_team2 += (
+                1 if game_event.type != GameEvent.EventType.OUT else 0
+            )
+            game_event.inning.outs_team2 += (
+                1 if game_event.type == GameEvent.EventType.OUT else 0
+            )
 
         game_event.inning.save()
 
@@ -266,14 +305,16 @@ class Game(BaseModel):
         hitters_stack = [0, 0, 0, 0]
         index = 0
         for event in inning.events.all():
-            if event.type == GameEvent.EventType.OUT: continue
+            if event.type == GameEvent.EventType.OUT:
+                continue
 
             movements = self.TYPES_MOVEMENTS_MAP[event.type]
             hitters_stack[index] = movements
 
             # add up movements to base runners
             for i in range(index - 1, -1, -1):
-                if i < 0: continue
+                if i < 0:
+                    continue
 
                 hitters_stack[i] += movements if hitters_stack[i] else 0
 
@@ -293,14 +334,19 @@ class Game(BaseModel):
 
         subject_team = self.team1 if inning.is_first_half() else self.team2
 
-        if not subject_team: return None
+        if not subject_team:
+            return None
 
-        team_events = list(filter(lambda ev: subject_team.has_member(ev.member_id), inning.events.all()))
+        team_events = list(
+            filter(
+                lambda ev: subject_team.has_member(ev.member_id), inning.events.all()
+            )
+        )
         if not team_events:
-            return subject_team.teammember_set.first().member
+            return subject_team.members.first()
         last_event = team_events[-1]
         last_hitter = last_event.member
-        members = [tm.member for tm in subject_team.teammember_set.all()]
+        members = list(subject_team.members.all())
         last_hitter_index = members.index(last_hitter)
         try:
             return members[last_hitter_index + 1]
@@ -319,9 +365,9 @@ class Game(BaseModel):
         except IndexError:
             return False
         return (
-                len(self.innings.all()) >= self.total_innings
-                and last_inning.outs_team1 == 3
-                and last_inning.outs_team2 == 3
+            len(self.innings.all()) >= self.total_innings
+            and last_inning.outs_team1 == 3
+            and last_inning.outs_team2 == 3
         )
 
 
@@ -334,32 +380,29 @@ class TeamMember(BaseModel):
     class Meta:
         constraints = [
             UniqueConstraint(
-                name='team_member_uq',
+                name="team_member_uq",
                 fields=[
-                    'team_id',
-                    'member_id',
-                    'game_id',
-                ]
+                    "team_id",
+                    "member_id",
+                    "game_id",
+                ],
             )
         ]
-        ordering = ['order']
+        ordering = ["order"]
 
     def as_dict(self):
         return {
             "team": self.dict_from_relationship_field("team"),
             "member": self.dict_from_relationship_field("member"),
             "game": self.dict_from_relationship_field("game"),
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
         }
 
 
 class Inning(BaseModel):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="innings")
     number = models.IntegerField(
-        validators=[
-            MaxValueValidator(25),
-            MinValueValidator(1)
-        ]
+        validators=[MaxValueValidator(25), MinValueValidator(1)]
     )
     hits_team1 = models.IntegerField(default=0)
     hits_team2 = models.IntegerField(default=0)
@@ -369,7 +412,7 @@ class Inning(BaseModel):
     careers_team2 = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['number']
+        ordering = ["number"]
 
     def __str__(self):
         return f"Inning #{self.number}: [{self.careers_team1}][{self.careers_team2}]"
@@ -383,7 +426,7 @@ class Inning(BaseModel):
             "outs_team2": self.outs_team2,
             "careers_team1": self.careers_team1,
             "careers_team2": self.careers_team2,
-            **self.id_timestamps_dict()
+            **self.id_timestamps_dict(),
         }
 
     def is_over(self):

@@ -110,6 +110,7 @@ def get_next_hitter(request):
 
     return JsonResponse(next_hitter.as_dict())
 
+
 def pitch_question(request):
     game_id = request.GET.get("game_id", None)
 
@@ -144,7 +145,7 @@ def pitch_question(request):
 
     question_pack = random.choice(question_packs)
 
-    return JsonResponse(question_pack.question.as_dict())
+    return JsonResponse(question_pack.question.as_dict(include_answers=True))
 
 
 def check_answer(request):
