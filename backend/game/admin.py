@@ -3,31 +3,39 @@ from game import models
 
 
 @admin.register(models.Question)
-class QuestionAdmin(admin.ModelAdmin): ...
+class QuestionAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.Answer)
-class AnswerAdmin(admin.ModelAdmin): ...
+class AnswerAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.Pack)
-class PackAdmin(admin.ModelAdmin): ...
+class PackAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.QuestionPack)
-class QuestionPackAdmin(admin.ModelAdmin): ...
+class QuestionPackAdmin(admin.ModelAdmin):
+    list_filter = ("pack",)
+    list_display = ("pack__name", "question__question", "created_at")
 
 
 @admin.register(models.Team)
-class TeamAdmin(admin.ModelAdmin): ...
+class TeamAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.Member)
-class MemberAdmin(admin.ModelAdmin): ...
+class MemberAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.GameEvent)
-class GameEventAdmin(admin.ModelAdmin): ...
+class GameEventAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.Game)
@@ -38,9 +46,10 @@ class GameAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TeamMember)
-class TeamMemberAdmin(admin.ModelAdmin): ...
+class TeamMemberAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(models.Inning)
-class InningAdmin(admin.ModelAdmin): ...
-
+class InningAdmin(admin.ModelAdmin):
+    ...
