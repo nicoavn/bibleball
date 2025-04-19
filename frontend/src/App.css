@@ -1,12 +1,213 @@
 #root {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('assets/fonts/DS-DIGI.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('assets/fonts/DS-DIGIB.TTF') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('assets/fonts/DS-DIGII.TTF') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('assets/fonts/DS-DIGIT.TTF') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+.scoreboard {
+  min-height: 345px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 2rem;
+}
+
+.scoreboard .logo {
+  background: url("assets/logo-309-294.png") center center no-repeat;
+  width: 309px;
+  height: 294px;
+}
+
+.scoreboard .team-logos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scoreboard .team-logos > div {
+  width: 250px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.score-boxes {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 36px;
+}
+
+.score-boxes .inning,
+.score-boxes .outs {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.score-boxes .inning.not-played .top,
+.score-boxes .inning.not-played .bottom {
+  color: transparent;
+}
+
+.score-boxes .score-box-heading {
+  color: #FFFFFF;
+  font-weight: 500;
+  font-size: 22px;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: "Arial", sans-serif;
+}
+
+.score-boxes .score-box {
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 20px;
+  border: 4px solid rgba(255, 255, 255, 0.65);
+  color: #F1F2F2;
+  font-size: 112px;
+  line-height: 112px;
+  text-align: center;
+  vertical-align: middle;
+  width: 120px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "DS-Digital", "Arial", sans-serif;
+}
+
+.score-boxes .top {
+  margin-bottom: 8px;
+}
+
+.score-boxes .bottom {
+  color: #FBB040;
+}
+
+.score-boxes .outs {
+}
+
+.score-boxes .outs > div + div {
+  color: #FBB040;
+}
+
+.field {
+  background: url("assets/bg-field.png") center center no-repeat;
+  width: 1099px;
+  height: 713px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.field .wait-box {
+  position: absolute;
+  width: 140px;
+  height: 90px;
+  display: flex;
+  gap: 8px;
+  bottom: 48px;
+}
+
+.field .wait-box.wait-box-left {
+  left: 200px;
+}
+
+.field .wait-box.wait-box-right {
+  right: 200px;
+}
+
+.field .player {
+  width: 66px;
+  height: 90px;
+  background: transparent center center no-repeat;
+}
+
+.field .player.team-1 {
+  background-image: url("assets/player1.png");
+}
+
+.field .player.team-2 {
+  background-image: url("assets/player2.png");
+}
+
+.field .player.a-bat {
+  left: calc(50% - 80px);
+  bottom: 106px;
+  position: absolute;
+}
+
+.field .player.running-base.first {
+  right: 315px;
+  bottom: 360px;
+  position: absolute;
+}
+
+.field .player.running-base.second {
+  left: calc(50% - 33px);
+  bottom: 580px;
+  position: absolute;
+}
+
+.field .player.running-base.third {
+  left: 315px;
+  bottom: 360px;
+  position: absolute;
+}
+
+.field .player.running-base.scores {
+  left: calc(50% - 33px);
+  bottom: 106px;
+  position: absolute;
 }
 
 .container-actions {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin: 36px auto 0;
+  width: 300px;
+}
+
+.container-actions select {
+  padding: 6px 16px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.container-actions button {
+  padding: 6px 16px;
+  text-transform: uppercase;
 }

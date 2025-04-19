@@ -15,6 +15,7 @@ function App() {
     const fetchGame = async () => {
       const params = {
         pack_id: selectedPack.id,
+        game_id: 1, // TODO: Remove
       }
       const response = await fetch(API_URL + 'start?' + new URLSearchParams(params).toString());
       const game = await response.json();
@@ -46,9 +47,67 @@ function App() {
 
   return (
     <>
-      <h1>Bibleball</h1>
+      <div className="scoreboard">
+        <div className="logo"></div>
+        <div className="team-logos">
+          <div className="logo1"></div>
+          <div className="logo2"></div>
+        </div>
+        <div className="score-boxes">
+          <div className="inning">
+            <div className="score-box-heading">1</div>
+            <div className="top score-box">01</div>
+            <div className="bottom score-box">01</div>
+          </div>
+          <div className="inning">
+            <div className="score-box-heading">2</div>
+            <div className="top score-box">01</div>
+            <div className="bottom score-box">00</div>
+          </div>
+          <div className="inning not-played">
+            <div className="score-box-heading">3</div>
+            <div className="top score-box">00</div>
+            <div className="bottom score-box">00</div>
+          </div>
+          <div className="inning not-played">
+            <div className="score-box-heading">4</div>
+            <div className="top score-box">00</div>
+            <div className="bottom score-box">00</div>
+          </div>
+          <div className="inning not-played">
+            <div className="score-box-heading">5</div>
+            <div className="top score-box">00</div>
+            <div className="bottom score-box">00</div>
+          </div>
+          <div className="inning">
+            <div className="score-box-heading">Carreras</div>
+            <div className="top score-box">02</div>
+            <div className="bottom score-box">01</div>
+          </div>
+          <div className="outs">
+            <div className="score-box-heading">Outs</div>
+            <div className="score-box">01</div>
+          </div>
+        </div>
+      </div>
 
-      {JSON.stringify(game, null, 2)}
+      <div className="field">
+        <div className="wait-box wait-box-left">
+          <div className="player team-1"></div>
+          <div className="player team-1"></div>
+        </div>
+        <div className="wait-box wait-box-right">
+          <div className="player team-2"></div>
+          <div className="player team-2"></div>
+        </div>
+
+        <div className="player team-1 a-bat "></div>
+        {/*<div className="player team-2 a-bat "></div>*/}
+        {/*<div className="player team-1 running-base first"></div>*/}
+        {/*<div className="player team-1 running-base second"></div>*/}
+        {/*<div className="player team-1 running-base third"></div>*/}
+        {/*<div className="player team-1 running-base scores"></div>*/}
+      </div>
 
       <div className="container-actions">
         <select name="pack" id="pack" onChange={onPackSelect}>
@@ -57,11 +116,7 @@ function App() {
 
 
         <button onClick={onStartGame}>Start Game</button>
-        <button>Get Next Hitter</button>
         <button>Pitch Question</button>
-        <button>Answer</button>
-        <button>Add Team</button>
-        <button>Add Member</button>
       </div>
     </>
   )
