@@ -275,11 +275,9 @@ class Game(BaseModel):
         if self.is_over():
             return None
 
-        inning = self.innings.last()
-        if not inning or (inning and inning.is_over()):
-            return self.generate_next_inning(inning)
-
-        return inning
+        for inning in self.innings.all():
+            if inning.outs_team1 < 3 or inning.outs_team2 < 3:
+                return inning
 
     def generate_next_inning(self, last_inning=None):
         number = last_inning.number + 1 if last_inning else 1

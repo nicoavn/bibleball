@@ -1,8 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { API_URL } from '../constants.js'
 
 const useSubmitAnswer = (gameId) => {
-  const [result, setResult] = useState(null)
   const submitAnswer = useCallback(({
     answerId,
     memberId,
@@ -14,15 +13,13 @@ const useSubmitAnswer = (gameId) => {
         game_id: gameId,
         member_id: memberId,
       }
-      const response = await fetch(API_URL + 'check-answer?' + new URLSearchParams(params).toString())
-      setResult(await response.json())
+      await fetch(API_URL + 'check-answer?' + new URLSearchParams(params).toString())
     }
 
     checkAnswer();
   }, [gameId]);
 
   return {
-    result,
     submitAnswer,
   };
 };

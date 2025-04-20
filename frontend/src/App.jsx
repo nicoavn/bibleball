@@ -9,6 +9,7 @@ import useSubmitAnswer from './hooks/useSubmitAnswer.js'
 function App () {
   const [packs, setPacks] = useState([])
   const [selectedPack, setSelectedPack] = useState(null)
+  const [selectedAnswer, setSelectedAnswer] = useState(null)
   const [inningsNumber, setInningsNumber] = useState(MAX_INNINGS)
 
   const {
@@ -21,18 +22,18 @@ function App () {
   console.log('gameId', gameId);
 
   const {
+    fetch: fetchBoard,
     game,
-    nextHitter
+    nextHitter,
   } = useGameBoard(gameId)
 
   const {
     pitch,
     question,
-    reset,
+    reset: resetQuestion,
   } = usePitchQuestion(gameId)
 
   const {
-    result,
     submitAnswer
   } = useSubmitAnswer(gameId)
 
@@ -74,18 +75,19 @@ function App () {
     pitch();
   }, [pitch, question])
 
-  console.log('question', question);
-
-  const onSubmitAnswer = useCallback((selectedAnswerId) => {
+  const onSubmitAnswer = useCallback((selectedAnswer) => {
     submitAnswer({
-      answerId: selectedAnswerId,
+      answerId: selectedAnswer.id,
       memberId: nextHitter.id,
     });
+    setSelectedAnswer(selectedAnswer);
   }, [nextHitter, submitAnswer]);
 
   const onNextTurn = useCallback(() => {
-    reset();
-  }, [reset]);
+    resetQuestion();
+    setSelectedAnswer(null);
+    fetchBoard();
+  }, [fetchBoard, resetQuestion]);
 
   useEffect(() => {
     const fetchPacks = async () => {
@@ -174,8 +176,22 @@ function App () {
           </div>
           <div className="answers">
             {question.answers.map((answer) => (
-              <button key={answer.id} onClick={() => onSubmitAnswer(answer.id)}>{answer.answer}</button>
+              <button
+                className={
+                  (answer.is_correct ? "correct" : "") +
+                  (answer.id === selectedAnswer?.id ? " selected" : "")
+                }
+                key={answer.id}
+                onClick={() => onSubmitAnswer(answer)}
+              >{answer.answer}</button>
             ))}
+          </div>
+          <div className="action-continue">
+            {!!selectedAnswer && (
+              <button className="btn-continue" onClick={onNextTurn}>
+                Continuar
+              </button>
+            )}
           </div>
         </div>
       )}
