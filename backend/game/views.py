@@ -2,7 +2,16 @@ import random
 
 from django.http import HttpResponse, JsonResponse
 
-from game.models import Game, Team, TeamMember, Member, Answer, Pack, QuestionPack
+from game.models import (
+    Game,
+    Team,
+    TeamMember,
+    Member,
+    Answer,
+    Pack,
+    QuestionPack,
+    Inning,
+)
 
 
 def index(request):
@@ -10,6 +19,7 @@ def index(request):
 
 
 def start_game(request):
+    innings_number = request.GET.get("innings_number", None)
     game_id = request.GET.get("game_id", None)
     pack_id = request.GET.get("pack_id", None)
     timer_seconds = request.GET.get("timer_seconds", 30)
@@ -36,6 +46,15 @@ def start_game(request):
             team1=team1,
             team2=team2,
             pack=pack,
+        )
+        Inning.objects.bulk_create(
+            [
+                Inning(
+                    game=game,
+                    number=inning_number,
+                )
+                for inning_number, _ in enumerate(range(int(innings_number)), start=1)
+            ]
         )
 
     return JsonResponse(game.as_dict())
@@ -198,7 +217,9 @@ def get_game_board(request):
         return HttpResponse("Invalid game.", status=400)
 
     board["game"] = game.as_dict()
-    board["next_hitter"] = game.get_next_hitter().as_dict()
+    board["next_hitter"] = (
+        game.get_next_hitter().as_dict() if game.get_next_hitter() else None
+    )
 
     return JsonResponse(board)
 
