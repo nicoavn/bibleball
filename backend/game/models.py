@@ -449,7 +449,7 @@ class Inning(BaseModel):
             "outs_team2": self.outs_team2,
             "careers_team1": self.careers_team1,
             "careers_team2": self.careers_team2,
-            "played": bool(self.events),
+            "played": self.events.exists(),
             **self.id_timestamps_dict(),
         }
 

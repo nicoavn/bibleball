@@ -5,6 +5,7 @@ import useGameBoard from './hooks/useGameBoard.js'
 import useLocalStorage, { GAME_STORAGE_KEY } from './hooks/useLocalStorage.js'
 import usePitchQuestion from './hooks/usePitchQuestion.js'
 import useSubmitAnswer from './hooks/useSubmitAnswer.js'
+import useBaseRunners from './hooks/useBaseRunners.js'
 
 function App () {
   const [packs, setPacks] = useState([])
@@ -19,8 +20,6 @@ function App () {
 
   const gameId = getValue(GAME_STORAGE_KEY)
 
-  console.log('gameId', gameId);
-
   const {
     fetch: fetchBoard,
     game,
@@ -33,13 +32,23 @@ function App () {
     reset: resetQuestion,
   } = usePitchQuestion(gameId)
 
+  console.log('question', question)
+
   const {
     submitAnswer
   } = useSubmitAnswer(gameId)
 
+  const {
+    firstBaseRunner,
+    secondBaseRunner,
+    thirdBaseRunner,
+    scorer,
+    updateRunners
+  } = useBaseRunners()
+
   const onStartGame = useCallback(() => {
     if (!selectedPack) {
-      return;
+      return
     }
 
     const fetchGame = async () => {
@@ -71,23 +80,24 @@ function App () {
   }, [packs])
 
   const onPitchClick = useCallback(() => {
-    if (question) return;
-    pitch();
+    if (question) return
+    pitch()
   }, [pitch, question])
 
   const onSubmitAnswer = useCallback((selectedAnswer) => {
     submitAnswer({
       answerId: selectedAnswer.id,
       memberId: nextHitter.id,
-    });
-    setSelectedAnswer(selectedAnswer);
-  }, [nextHitter, submitAnswer]);
+    })
+    setSelectedAnswer(selectedAnswer)
+    updateRunners(question, selectedAnswer)
+  }, [nextHitter, question, submitAnswer, updateRunners])
 
   const onNextTurn = useCallback(() => {
-    resetQuestion();
-    setSelectedAnswer(null);
-    fetchBoard();
-  }, [fetchBoard, resetQuestion]);
+    resetQuestion()
+    setSelectedAnswer(null)
+    fetchBoard()
+  }, [fetchBoard, resetQuestion])
 
   useEffect(() => {
     const fetchPacks = async () => {
@@ -110,9 +120,9 @@ function App () {
     runs_team2,
     outs,
   } = useMemo(() => {
-    let runs_team1 = 0;
-    let runs_team2 = 0;
-    let outs = 0;
+    let runs_team1 = 0
+    let runs_team2 = 0
+    let outs = 0
     let isTop = false;
 
     (game?.innings ?? []).forEach((inning) => {
@@ -127,7 +137,7 @@ function App () {
       } else {
         outs = 0
       }
-    });
+    })
 
     return {
       isTop,
@@ -135,7 +145,9 @@ function App () {
       runs_team2,
       outs,
     }
-  }, [game]);
+  }, [game])
+
+  const battingTeam = isTop ? 'team-1' : 'team-2'
 
   return (
     <>
@@ -147,7 +159,8 @@ function App () {
         </div>
         <div className="score-boxes">
           {(game?.innings ?? []).map(inning => (
-            <div key={inning.id} className={'inning' + (inning.played ? ' played' : '')}>
+            <div key={inning.id}
+                 className={'inning' + (inning.played ? ' played' : '')}>
               <div className="score-box-heading">{inning.number}</div>
               <div
                 className="top score-box">{`${inning.careers_team1}`.padStart(2, '0')}</div>
@@ -178,8 +191,8 @@ function App () {
             {question.answers.map((answer) => (
               <button
                 className={
-                  (answer.is_correct ? "correct" : "") +
-                  (answer.id === selectedAnswer?.id ? " selected" : "")
+                  (answer.is_correct ? 'correct' : '') +
+                  (answer.id === selectedAnswer?.id ? ' selected' : '')
                 }
                 key={answer.id}
                 onClick={() => onSubmitAnswer(answer)}
@@ -224,14 +237,24 @@ function App () {
           </div>
 
           {!!nextHitter && (
-            <div className="player team-1 at-bat "></div>
+            <div className={`player at-bat ${battingTeam}`}></div>
           )}
-          {/*<div className="player team-2 at-bat "></div>*/}
-          {/*<div className="player team-1 running-base first"></div>*/}
-          {/*<div className="player team-1 running-base second"></div>*/}
-          {/*<div className="player team-1 running-base third"></div>*/}
-          {/*<div className="player team-1 running-base scores"></div>*/}
 
+          {!!firstBaseRunner && (
+            <div className={`player running-base first ${battingTeam}`}></div>
+          )}
+
+          {!!secondBaseRunner && (
+            <div className={`player running-base second ${battingTeam}`}></div>
+          )}
+
+          {!!thirdBaseRunner && (
+            <div className={`player running-base third ${battingTeam}`}></div>
+          )}
+
+          {!!scorer && (
+            <div className={`player running-base scores ${battingTeam}`}></div>
+          )}
 
           <div className="container-actions">
             {!game && (
