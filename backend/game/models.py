@@ -154,27 +154,9 @@ class Team(BaseModel):
 
 
 class Member(BaseModel):
-    class FieldingPosition(models.TextChoices):
-        P = "P", _("Pitcher")
-        FB = "1B", _("First Base")
-        SB = "2B", _("Second Base")
-        TB = "3B", _("Third Base")
-        SS = "SS", _("Shortstop")
-        C = "C", _("Catcher")
-        LF = "LF", _("Left Field")
-        CF = "CF", _("Center Field")
-        RF = "RF", _("Right Field")
-        DH = "DH", _("Designated Hitter")
-
     name = models.CharField(max_length=250)
     nickname = models.CharField(max_length=250, null=True, blank=True)
     jersey_no = models.IntegerField(default=0)
-    position = models.CharField(
-        max_length=2,
-        choices=FieldingPosition,
-        null=True,
-        blank=True,
-    )
 
     def __str__(self):
         return f"[{self.jersey_no or 0}] {self.name} ({self.nickname})"
@@ -392,9 +374,27 @@ class Game(BaseModel):
 
 
 class TeamMember(BaseModel):
+    class FieldingPosition(models.TextChoices):
+        P = "P", _("Pitcher")
+        FB = "1B", _("First Base")
+        SB = "2B", _("Second Base")
+        TB = "3B", _("Third Base")
+        SS = "SS", _("Shortstop")
+        C = "C", _("Catcher")
+        LF = "LF", _("Left Field")
+        CF = "CF", _("Center Field")
+        RF = "RF", _("Right Field")
+        DH = "DH", _("Designated Hitter")
+
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    position = models.CharField(
+        max_length=2,
+        choices=FieldingPosition,
+        null=True,
+        blank=True,
+    )
     order = models.IntegerField(null=True, blank=True)
 
     class Meta:
