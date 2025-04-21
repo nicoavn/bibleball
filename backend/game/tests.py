@@ -4,7 +4,18 @@ import random
 from django.test import TestCase
 from freezegun import freeze_time
 
-from game.models import Game, Pack, Team, Member, TeamMember, GameEvent, Inning, Question, Answer, QuestionPack
+from game.models import (
+    Game,
+    Pack,
+    Team,
+    Member,
+    TeamMember,
+    GameEvent,
+    Inning,
+    Question,
+    Answer,
+    QuestionPack,
+)
 
 
 def add_member(game: Game, team: Team, name: str):
@@ -29,7 +40,7 @@ class GameTestCase(TestCase):
             total_innings=1,
             pack=self.pack,
             team1=self.team1,
-            team2=self.team2
+            team2=self.team2,
         )
 
         Inning.objects.create(game=self.game, number=1)
@@ -101,7 +112,7 @@ class GameTestCase(TestCase):
                 GameEvent.EventType.H1,
                 GameEvent.EventType.H2,
                 GameEvent.EventType.H3,
-                GameEvent.EventType.H4
+                GameEvent.EventType.H4,
             ]
         )
 
@@ -115,30 +126,50 @@ class GameTestCase(TestCase):
             (GameEvent.EventType.H2, 0),
             (GameEvent.EventType.H2, GameEvent.EventType.H1, 0),
             (GameEvent.EventType.H3, 0),
-
             (GameEvent.EventType.H4, 1),
             (GameEvent.EventType.H1, GameEvent.EventType.H3, 1),
-            (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H1, 1),
+            (
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                1,
+            ),
             (GameEvent.EventType.H3, GameEvent.EventType.H1, 1),
             (GameEvent.EventType.H3, GameEvent.EventType.H2, 1),
             (GameEvent.EventType.H2, GameEvent.EventType.H2, 1),
             (GameEvent.EventType.H2, GameEvent.EventType.H1, GameEvent.EventType.H1, 1),
             (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H2, 1),
-
             (GameEvent.EventType.H1, GameEvent.EventType.H4, 2),
             (GameEvent.EventType.H2, GameEvent.EventType.H4, 2),
             (GameEvent.EventType.H3, GameEvent.EventType.H4, 2),
             (GameEvent.EventType.H4, GameEvent.EventType.H4, 2),
-            (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H2, 2),
+            (
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H2,
+                2,
+            ),
             (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H3, 2),
             (GameEvent.EventType.H2, GameEvent.EventType.H1, GameEvent.EventType.H3, 2),
-
-            (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H3, 3),
+            (
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H3,
+                3,
+            ),
             (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H4, 3),
             (GameEvent.EventType.H2, GameEvent.EventType.H1, GameEvent.EventType.H4, 3),
             (GameEvent.EventType.H1, GameEvent.EventType.H2, GameEvent.EventType.H4, 3),
-
-            (GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H1, GameEvent.EventType.H4, 4),
+            (
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H1,
+                GameEvent.EventType.H4,
+                4,
+            ),
         ]
 
         for no, event_case in enumerate(event_cases, start=1):
@@ -151,45 +182,68 @@ class GameTestCase(TestCase):
                     member=batting,
                     inning=inning,
                     question=Question.objects.create(question="dummy question?"),
-                    type=event_case[i]
+                    type=event_case[i],
                 )
             self.assertEqual(produced_careers, game.get_produced_careers(inning))
 
     @freeze_time("2020-12-12 14:00:00")
     def test_start_game(self):
-        response = self.client.get('/game/start', {"pack_id": self.pack.pk})
+        response = self.client.get(
+            "/game/start",
+            {
+                "pack_id": self.pack.pk,
+                "innings_number": 5,
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
         game_dict = response.json()
-        self.assertGreater(game_dict.pop('id'), 0)
-        self.assertGreater(game_dict['team1'].pop('id'), 0)
-        self.assertGreater(game_dict['team2'].pop('id'), 0)
+        self.assertGreater(game_dict.pop("id"), 0)
+        self.assertGreater(game_dict["team1"].pop("id"), 0)
+        self.assertGreater(game_dict["team2"].pop("id"), 0)
+
+        for inning in game_dict["innings"]:
+            self.assertGreater(inning.pop("id"), 0)
+            inning.pop("created_at")
+            inning.pop("updated_at")
+
+        base_inning = {
+            "careers_team1": 0,
+            "careers_team2": 0,
+            "hits_team1": 0,
+            "hits_team2": 0,
+            "outs_team1": 0,
+            "outs_team2": 0,
+            "played": False,
+        }
+
+        innings = [{**base_inning, "number": number} for number in range(1, 6)]
 
         self.assertDictEqual(
             game_dict,
             {
                 "pack": self.pack.as_dict(),
                 "team1": {
-                    'created_at': '2020-12-12 14:00:00+00:00',
-                    'members': [],
-                    'name': 'Team 1',
-                    'updated_at': '2020-12-12 14:00:00+00:00'
+                    "created_at": "2020-12-12 14:00:00+00:00",
+                    "members": [],
+                    "name": "Team 1",
+                    "updated_at": "2020-12-12 14:00:00+00:00",
                 },
                 "team2": {
-                    'created_at': '2020-12-12 14:00:00+00:00',
-                    'members': [],
-                    'name': 'Team 2',
-                    'updated_at': '2020-12-12 14:00:00+00:00'
+                    "created_at": "2020-12-12 14:00:00+00:00",
+                    "members": [],
+                    "name": "Team 2",
+                    "updated_at": "2020-12-12 14:00:00+00:00",
                 },
                 "timer_seconds": 30,
-                "innings": [],
-                "created_at": '2020-12-12 14:00:00+00:00',
-                "updated_at": '2020-12-12 14:00:00+00:00',
-            }
+                "innings": innings,
+                "created_at": "2020-12-12 14:00:00+00:00",
+                "updated_at": "2020-12-12 14:00:00+00:00",
+            },
         )
 
     def test_continue_game(self):
-        response = self.client.get('/game/start', {"game_id": self.game.pk})
+        response = self.client.get("/game/start", {"game_id": self.game.pk})
         self.assertEqual(response.status_code, 200)
 
         self.assertDictEqual(
@@ -198,22 +252,25 @@ class GameTestCase(TestCase):
         )
 
     def test_pitch_question(self):
-        response = self.client.get('/game/pitch', {"game_id": self.game.pk})
+        response = self.client.get("/game/pitch", {"game_id": self.game.pk})
         self.assertEqual(response.status_code, 200)
 
         question_dict = response.json()
 
-        self.assertIn(question_dict.get("id"), self.game.pack.question_packs.values_list("question_id", flat=True))
+        self.assertIn(
+            question_dict.get("id"),
+            self.game.pack.question_packs.values_list("question_id", flat=True),
+        )
 
     def test_get_next_hitter(self):
         members = list(self.team1.members.all())
         member1 = members[0]
         member2 = members[1]
 
-        response = self.client.get('/game/next-hitter', {"game_id": self.game.pk})
+        response = self.client.get("/game/next-hitter", {"game_id": self.game.pk})
         self.assertEqual(response.status_code, 200)
         next_hitter_dict = response.json()
-        self.assertEqual(next_hitter_dict.get('id'), member1.pk)
+        self.assertEqual(next_hitter_dict.get("id"), member1.pk)
 
         current_inning = self.game.get_current_inning()
         GameEvent.objects.create(
@@ -223,44 +280,41 @@ class GameTestCase(TestCase):
             type=GameEvent.EventType.H1,
         )
 
-        response = self.client.get('/game/next-hitter', {"game_id": self.game.pk})
+        response = self.client.get("/game/next-hitter", {"game_id": self.game.pk})
         self.assertEqual(response.status_code, 200)
         next_hitter_dict = response.json()
-        self.assertEqual(next_hitter_dict.get('id'), member2.pk)
+        self.assertEqual(next_hitter_dict.get("id"), member2.pk)
 
     def test_check_valid_answer(self):
         response = self.client.get(
-            '/game/check-answer',
+            "/game/check-answer",
             {
                 "answer_id": self.answer1a.pk,
                 "game_id": self.game.pk,
                 "member_id": self.game.team1.members.first().pk,
-            }
+            },
         )
         self.assertEqual(response.status_code, 200)
         events = self.game.get_current_inning().events.all()
         self.assertEqual(len(events), 1)
         self.assertEqual(
             events[0].type,
-            Game.QUESTION_DIFFICULTY_EVENT_TYPE_MAP[self.answer1a.question.difficulty]
+            Game.QUESTION_DIFFICULTY_EVENT_TYPE_MAP[self.answer1a.question.difficulty],
         )
 
     def test_check_invalid_answer(self):
         response = self.client.get(
-            '/game/check-answer',
+            "/game/check-answer",
             {
                 "answer_id": self.answer1b.pk,
                 "game_id": self.game.pk,
                 "member_id": self.game.team1.members.first().pk,
-            }
+            },
         )
         self.assertEqual(response.status_code, 200)
         events = self.game.get_current_inning().events.all()
         self.assertEqual(len(events), 1)
-        self.assertEqual(
-            events[0].type,
-            GameEvent.EventType.OUT
-        )
+        self.assertEqual(events[0].type, GameEvent.EventType.OUT)
 
     def test_get_game_board(self):
         current_inning = self.game.get_current_inning()
@@ -287,16 +341,16 @@ class GameTestCase(TestCase):
             type=GameEvent.EventType.OUT,
         )
         response = self.client.get(
-            '/game/board',
+            "/game/board",
             {
                 "game_id": self.game.pk,
-            }
+            },
         )
         self.assertEqual(response.status_code, 200)
-        print(json.dumps(self.game.as_dict(), indent=4, sort_keys=True))
         self.assertDictEqual(
             response.json(),
             {
                 "game": self.game.as_dict(),
-            }
+                "next_hitter": self.game.get_next_hitter().as_dict(),
+            },
         )

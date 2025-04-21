@@ -7,7 +7,7 @@ import {
 const emptyBases = [0, 0, 0, 0];
 
 const useBaseRunners = () => {
-  const [runners, setRunners] = useState(emptyBases);
+  const [runners, setRunners] = useState([...emptyBases]);
 
   const updateRunners = useCallback((question, answer) => {
     if (!answer.is_correct) {
@@ -38,12 +38,15 @@ const useBaseRunners = () => {
 
   }, [runners]);
 
+  const resetRunners = useCallback(() => setRunners([...emptyBases]), [])
+
   return {
     firstBaseRunner: runners[0] > 0,
     secondBaseRunner: runners[1] > 0,
     thirdBaseRunner: runners[2] > 0,
     scorer: runners[3] > 0,
-    updateRunners
+    resetRunners,
+    updateRunners,
   }
 }
 

@@ -32,8 +32,6 @@ function App () {
     reset: resetQuestion,
   } = usePitchQuestion(gameId)
 
-  console.log('question', question)
-
   const {
     submitAnswer
   } = useSubmitAnswer(gameId)
@@ -43,7 +41,8 @@ function App () {
     secondBaseRunner,
     thirdBaseRunner,
     scorer,
-    updateRunners
+    resetRunners,
+    updateRunners,
   } = useBaseRunners()
 
   const onStartGame = useCallback(() => {
@@ -112,8 +111,6 @@ function App () {
     fetchPacks()
   }, [])
 
-  console.log(game)
-
   const {
     isTop,
     runs_team1,
@@ -148,6 +145,10 @@ function App () {
   }, [game])
 
   const battingTeam = isTop ? 'team-1' : 'team-2'
+
+  useEffect(() => {
+    resetRunners();
+  }, [isTop, resetRunners])
 
   return (
     <>
