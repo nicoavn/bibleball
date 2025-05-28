@@ -1,10 +1,14 @@
 import abc
+from datetime import datetime as dt
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import UniqueConstraint, Q
 from django.forms import model_to_dict
 from django.utils.translation import gettext_lazy as _
+
+from game.managers import GameQuerySet, MemberQuerySet
 
 
 class BaseModel(models.Model):
@@ -74,6 +78,15 @@ class Answer(BaseModel):
     def __str__(self):
         correctness_string = "Correct" if self.is_correct else "Incorrect"
         return f"{self.question}: {self.answer} ({correctness_string})"
+
+    def clean(self):
+        if (
+            self.is_correct
+            and self.question.answers.filter(
+                Q(is_correct=True) & ~Q(id=self.pk)
+            ).exists()
+        ):
+            raise ValidationError(_("Only one answer can be correct."))
 
     def as_dict(self, include_question=False):
         return {
@@ -158,6 +171,8 @@ class Member(BaseModel):
     nickname = models.CharField(max_length=250, null=True, blank=True)
     jersey_no = models.IntegerField(default=0)
 
+    objects = MemberQuerySet.as_manager()
+
     def __str__(self):
         return f"[{self.jersey_no or 0}] {self.name} ({self.nickname})"
 
@@ -224,6 +239,11 @@ class Game(BaseModel):
         Team, on_delete=models.CASCADE, related_name="games_as_team2"
     )
     total_innings = models.IntegerField(default=9)
+    short_code = models.CharField(
+        unique=True, max_length=10, blank=True, default="", editable=False
+    )
+
+    objects = GameQuerySet.as_manager()
 
     def __str__(self):
         game_result_string = ""
@@ -241,17 +261,32 @@ class Game(BaseModel):
         date_string = self.created_at.strftime("%a %d/%m/%Y")
         return f"{self.team1} vs {self.team2}: {date_string}{game_result_string}"
 
+    def save(self, *args, **kwargs):
+        if not self.short_code:
+            self.short_code = self._next_short_code()
+        return super().save(*args, **kwargs)
+
     def as_dict(self):
         return {
             "pack": self.dict_from_relationship_field("pack"),
             "team1": self.dict_from_relationship_field("team1"),
             "team2": self.dict_from_relationship_field("team2"),
+            "short_code": self.short_code,
             "timer_seconds": self.timer_seconds,
             "innings": [
                 inning.as_dict() for inning in self.innings.all() if self.innings
             ],
             **self.id_timestamps_dict(),
         }
+
+    def _next_short_code(self) -> str:
+        date, month, year = dt.now().strftime("%-d/%-m/%Y").split("/")
+        month_char = chr(int(month) + 64).__str__()
+        short_code_base = f"{month_char}{date}{year}"
+        games_on_date_count = Game.objects.filter(
+            short_code__startswith=short_code_base
+        ).count()
+        return short_code_base + str(games_on_date_count + 1)
 
     def get_current_inning(self):
         if self.is_over():
@@ -269,10 +304,10 @@ class Game(BaseModel):
         current_inning = self.get_current_inning()
 
         if not current_inning:
-            raise Exception("No inning started.")
+            raise Exception(_("No inning started."))
 
         if member != (current_hitter := self.get_next_hitter()):
-            raise Exception(f"Not current hitter: {current_hitter}")
+            raise Exception(_(f"Not current hitter: {current_hitter}."))
 
         game_event = GameEvent.objects.create(
             member=member,

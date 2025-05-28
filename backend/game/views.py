@@ -1,6 +1,7 @@
 import random
 
 from django.http import HttpResponse, JsonResponse
+from django.utils.translation import gettext_lazy as _
 
 from game.models import (
     Game,
@@ -15,14 +16,17 @@ from game.models import (
 
 
 def index(request):
-    return HttpResponse("Hello, world.")
+    return HttpResponse(_("Hello, world."))
 
 
 def start_game(request):
-    innings_number = request.GET.get("innings_number", None)
+    innings_number = request.GET.get("innings_number", 5)
     game_id = request.GET.get("game_id", None)
+    game_short_code = request.GET.get("code", None)
     pack_id = request.GET.get("pack_id", None)
     timer_seconds = request.GET.get("timer_seconds", 30)
+    id_team_1 = request.GET.get("id_team_1", None)
+    id_team_2 = request.GET.get("id_team_2", None)
 
     pack = None
     try:
@@ -31,16 +35,15 @@ def start_game(request):
         pass
 
     try:
-        game = Game.objects.get(id=game_id)
+        if game_id:
+            game = Game.objects.get(id=game_id)
+        else:
+            game = Game.objects.get(short_code__iexact=game_short_code)
     except Game.DoesNotExist:
         if not pack:
-            return HttpResponse("No pack id provided.", status=400)
-        team1 = Team.objects.create(
-            name="Team 1",
-        )
-        team2 = Team.objects.create(
-            name="Team 2",
-        )
+            return HttpResponse(_("No pack id provided."), status=400)
+        team1 = Team.objects.get_or_create(id=id_team_1, defaults={"name": "Team 1"})[0]
+        team2 = Team.objects.get_or_create(id=id_team_2, defaults={"name": "Team 2"})[0]
         game = Game.objects.create(
             timer_seconds=timer_seconds,
             team1=team1,
@@ -53,7 +56,7 @@ def start_game(request):
                     game=game,
                     number=inning_number,
                 )
-                for inning_number, _ in enumerate(range(int(innings_number)), start=1)
+                for inning_number, __ in enumerate(range(int(innings_number)), start=1)
             ]
         )
 
@@ -67,10 +70,10 @@ def add_team(request):
     try:
         team = Team.objects.get(id=team_id)
     except Team.DoesNotExist:
-        return HttpResponse("Invalid team.", status=400)
+        return HttpResponse(_("Invalid team."), status=400)
 
     if not name:
-        return HttpResponse("No name provided.", status=400)
+        return HttpResponse(_("No name provided."), status=400)
 
     team.name = name
     team.save()
@@ -90,15 +93,15 @@ def add_member(request):
     try:
         team = Team.objects.get(id=team_id)
     except Team.DoesNotExist:
-        return HttpResponse("Invalid team.", status=400)
+        return HttpResponse(_("Invalid team."), status=400)
 
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse("Invalid game.", status=400)
+        return HttpResponse(_("Invalid game."), status=400)
 
     if not name:
-        return HttpResponse("No name provided.", status=400)
+        return HttpResponse(_("No name provided."), status=400)
 
     member = Member.objects.create(
         name=name,
@@ -123,11 +126,24 @@ def get_next_hitter(request):
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse("Invalid game.", status=400)
+        return HttpResponse(_("Invalid game."), status=400)
 
     next_hitter = game.get_next_hitter()
 
     return JsonResponse(next_hitter.as_dict())
+
+
+def get_hitter_autocomplete(request):
+    hint = request.GET.get("hint", None)
+
+    if not hint or len(hint) < 3:
+        return HttpResponse(
+            _("Hint should be at least 3 character in length."), status=400
+        )
+
+    return JsonResponse(
+        {"hitters": [hitter.as_dict() for hitter in Member.objects.search(hint).all()]}
+    )
 
 
 def pitch_question(request):
@@ -140,14 +156,14 @@ def pitch_question(request):
             .first()
         )
     except Game.DoesNotExist:
-        return HttpResponse("Invalid game.", status=400)
+        return HttpResponse(_("Invalid game."), status=400)
 
     used_questions = {
         question_id
         for question_id in (
             filter(
                 lambda q: bool(1),
-                Game.objects.filter(pk=game_id).values_list(
+                Game.objects.filter(id=game_id).values_list(
                     "innings__events__question_id", flat=True
                 ),
             )
@@ -163,7 +179,7 @@ def pitch_question(request):
     )
 
     if not question_packs:
-        return HttpResponse("No available questions found.", status=400)
+        return HttpResponse(_("No available questions found."), status=400)
 
     question_pack = random.choice(question_packs)
 
@@ -178,17 +194,17 @@ def check_answer(request):
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse("Invalid game.", status=400)
+        return HttpResponse(_("Invalid game."), status=400)
 
     try:
         member = Member.objects.get(id=member_id)
     except Member.DoesNotExist:
-        return HttpResponse("Invalid member.", status=400)
+        return HttpResponse(_("Invalid member."), status=400)
 
     try:
         answer = Answer.objects.get(id=answer_id)
     except Answer.DoesNotExist:
-        return HttpResponse("Invalid answer.", status=400)
+        return HttpResponse(_("Invalid answer."), status=400)
 
     try:
         game.submit_answer(answer, member)
@@ -214,7 +230,7 @@ def get_game_board(request):
             .first()
         )
     except Game.DoesNotExist:
-        return HttpResponse("Invalid game.", status=400)
+        return HttpResponse(_("Invalid game."), status=400)
 
     board["game"] = game.as_dict()
     board["next_hitter"] = (
@@ -226,3 +242,41 @@ def get_game_board(request):
 
 def get_packs(request):
     return JsonResponse({"packs": [pack.as_dict() for pack in Pack.objects.all()]})
+
+
+def get_teams(request):
+    return JsonResponse({"teams": [team.as_dict() for team in Team.objects.all()]})
+
+
+def get_members(request):
+    return JsonResponse(
+        {"members": [member.as_dict() for member in Member.objects.all()]}
+    )
+
+
+def get_recent_games(request):
+    return JsonResponse({"games": [game.as_dict() for game in Game.objects.recent()]})
+
+
+def clone_team(request):
+    team_id = request.GET.get("team_id", None)
+
+    try:
+        cloned_team = Team.objects.get(id=team_id)
+        cloned_team.pk = None
+        cloned_team.save()
+
+        cloning_team = Team.objects.get(id=team_id)
+
+        team_members = (
+            TeamMember(team=cloned_team, member=cloning_member)
+            for cloning_member in cloning_team.members.all()
+        )
+
+        members = TeamMember.objects.bulk_create(team_members)
+
+        cloned_team.teammember_set.set(members)
+
+        return JsonResponse({"team": cloned_team.as_dict()})
+    except Team.DoesNotExist:
+        return HttpResponse(_("Invalid Team."), status=400)

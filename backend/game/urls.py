@@ -7,7 +7,16 @@ urlpatterns = [
     path("start", views.start_game, name="start_game"),
     path("pitch", views.pitch_question, name="pitch_question"),
     path("check-answer", views.check_answer, name="check_answer"),
-    path("next-hitter", views.get_next_hitter, name="get_next_hitter"),
+    path("hitter/next", views.get_next_hitter, name="get_next_hitter"),
+    path(
+        "hitter/autocomplete",
+        views.get_hitter_autocomplete,
+        name="get_hitter_autocomplete",
+    ),
     path("board", views.get_game_board, name="get_game_board"),
-    path("packs", views.get_packs, name="get_packs"),
+    path("pack", views.get_packs, name="get_packs"),
+    path("team", views.get_teams, name="get_teams"),
+    path("member", views.get_members, name="get_members"),
+    path("recent", views.get_recent_games, name="get_recent_games"),
+    path("team/clone", views.clone_team, name="clone_team"),
 ]

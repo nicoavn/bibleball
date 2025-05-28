@@ -1,10 +1,16 @@
 from django.contrib import admin
+
 from game import models
+
+
+class AnswerInline(admin.TabularInline):
+    model = models.Answer
+    extra = 0
 
 
 @admin.register(models.Question)
 class QuestionAdmin(admin.ModelAdmin):
-    ...
+    inlines = (AnswerInline,)
 
 
 @admin.register(models.Answer)

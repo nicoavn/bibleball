@@ -100,7 +100,7 @@ function App () {
 
   useEffect(() => {
     const fetchPacks = async () => {
-      const response = await fetch(API_URL + 'packs')
+      const response = await fetch(API_URL + 'pack')
       const data = await response.json()
       const packs = data.packs ?? []
       setPacks(packs)
