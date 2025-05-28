@@ -63,6 +63,25 @@ def start_game(request):
     return JsonResponse(game.as_dict())
 
 
+def repeat_game(request):
+    game_short_code = request.GET.get("code", None)
+    try:
+        cloned_game = Game.objects.get(short_code__iexact=game_short_code)
+        cloned_game.pk = None
+        cloned_game.short_code = None
+        cloned_game.save()
+
+        cloning_game = Game.objects.get(short_code__iexact=game_short_code)
+
+        cloned_game.team1 = cloning_game.team1.clone()
+        cloned_game.team2 = cloning_game.team2.clone()
+        cloned_game.save()
+
+        return JsonResponse(cloned_game.as_dict())
+    except Game.DoesNotExist:
+        return HttpResponse(_("Invalid game code provided."), status=400)
+
+
 def add_team(request):
     name = request.GET.get("name", None)
     team_id = request.GET.get("team_id", None)
@@ -262,20 +281,8 @@ def clone_team(request):
     team_id = request.GET.get("team_id", None)
 
     try:
-        cloned_team = Team.objects.get(id=team_id)
-        cloned_team.pk = None
-        cloned_team.save()
-
         cloning_team = Team.objects.get(id=team_id)
-
-        team_members = (
-            TeamMember(team=cloned_team, member=cloning_member)
-            for cloning_member in cloning_team.members.all()
-        )
-
-        members = TeamMember.objects.bulk_create(team_members)
-
-        cloned_team.teammember_set.set(members)
+        cloned_team = cloning_team.clone()
 
         return JsonResponse({"team": cloned_team.as_dict()})
     except Team.DoesNotExist:

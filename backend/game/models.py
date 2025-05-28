@@ -165,6 +165,22 @@ class Team(BaseModel):
     def has_member(self, member_id: int):
         return self.members.filter(id=member_id).exists()
 
+    def clone(self):
+        cloned_team = Team.objects.get(id=self.pk)
+        cloned_team.pk = None
+        cloned_team.save()
+
+        team_members = (
+            TeamMember(team=cloned_team, member=cloning_member)
+            for cloning_member in self.members.all()
+        )
+
+        members = TeamMember.objects.bulk_create(team_members)
+
+        cloned_team.teammember_set.set(members)
+
+        return cloned_team
+
 
 class Member(BaseModel):
     name = models.CharField(max_length=250)
@@ -296,6 +312,8 @@ class Game(BaseModel):
             if inning.outs_team1 < 3 or inning.outs_team2 < 3:
                 return inning
 
+        return None
+
     def generate_next_inning(self, last_inning=None):
         number = last_inning.number + 1 if last_inning else 1
         return Inning.objects.create(game=self, number=number)
@@ -423,7 +441,7 @@ class TeamMember(BaseModel):
 
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True)
     position = models.CharField(
         max_length=2,
         choices=FieldingPosition,
