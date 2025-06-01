@@ -79,13 +79,17 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
+    # "default": {
+    # "ENGINE": "django.db.backends.postgresql",
+    # "NAME": os.environ.get("DB_NAME", "bibleball_db"),
+    # "USER": os.environ.get("DB_USER", "bibleball_user"),
+    # "PASSWORD": os.environ.get("DB_PASSWORD", "bibleball_password"),
+    # "HOST": os.environ.get("DB_HOST", "localhost"),
+    # "PORT": "5432",
+    # }
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "bibleball_db"),
-        "USER": os.environ.get("DB_USER", "bibleball_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "bibleball_password"),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": "5432",
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "bibleball.sqlite3",
     }
 }
 

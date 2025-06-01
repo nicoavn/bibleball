@@ -4,7 +4,7 @@ anyio==3.7.1
 appnope==0.1.4
 asgiref==3.8.1
 asttokens==3.0.0
-asyncpg==0.28.0
+# asyncpg==0.28.0
 Authlib==1.2.0
 backcall==0.2.0
 bcrypt==4.0.1
@@ -50,7 +50,7 @@ pickleshare==0.7.5
 platformdirs==4.3.6
 pluggy==1.5.0
 prompt_toolkit==3.0.50
-psycopg2-binary==2.9.10
+# psycopg2-binary==2.9.10
 ptyprocess==0.7.0
 pure_eval==0.2.3
 pycodestyle==2.10.0

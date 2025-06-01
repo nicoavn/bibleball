@@ -1,32 +1,4 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: bibleball_user
-      POSTGRES_PASSWORD: bibleball_password
-      POSTGRES_DB: bibleball_db
-    ports:
-      - "5432:5432"
-    expose:
-      - "5432"
-    volumes:
-      - db-data:/var/lib/postgresql/data:cached
-
-  test-postgres:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: bibleball_user_test
-      POSTGRES_PASSWORD: bibleball_password_test
-      POSTGRES_DB: bibleball_db_test
-    ports:
-      - "5434:5432" # Use a different port to avoid conflicts with the main database
-    expose:
-      - "5434" # Exposing the different port for clarity
-    volumes:
-      - test-db-data:/var/lib/postgresql/data:cached
-
   backend:
     build:
       context: backend
@@ -36,30 +8,58 @@ services:
     volumes:
       - ./backend:/backend/:cached
       - ./.docker/.ipython:/root/.ipython:cached
-    environment:
-      PYTHONPATH: .
-      DB_NAME: bibleball_db
-      DB_USER: bibleball_user
-      DB_PASSWORD: bibleball_password
-      DB_HOST: postgres
-    depends_on:
-      - "postgres"
     ports:
       - "8000:8000"
+    environment:
+      PYTHONPATH: .
+#      DB_NAME: bibleball_db
+#      DB_USER: bibleball_user
+#      DB_PASSWORD: bibleball_password
+#      DB_HOST: postgres
+#    depends_on:
+#      - "postgres"
 
-  # frontend:
-  #   build:
-  #     context: frontend
-  #     dockerfile: Dockerfile
-  #   stdin_open: true
-  #   volumes:
-  #     - "./frontend:/app:cached"
-  #     - "./frontend/node_modules:/app/node_modules:cached"
-  #   environment:
-  #     - NODE_ENV=development
-  #   ports:
-  #     - 3000:3000
+#  postgres:
+#    image: postgres:15-alpine
+#    restart: always
+#    environment:
+#      POSTGRES_USER: bibleball_user
+#      POSTGRES_PASSWORD: bibleball_password
+#      POSTGRES_DB: bibleball_db
+#    ports:
+#      - "5432:5432"
+#    expose:
+#      - "5432"
+#    volumes:
+#      - db-data:/var/lib/postgresql/data:cached
 
-volumes:
-  db-data:
-  test-db-data:
+#  test-postgres:
+#    image: postgres:15-alpine
+#    restart: always
+#    environment:
+#      POSTGRES_USER: bibleball_user_test
+#      POSTGRES_PASSWORD: bibleball_password_test
+#      POSTGRES_DB: bibleball_db_test
+#    ports:
+#      - "5434:5432" # Use a different port to avoid conflicts with the main database
+#    expose:
+#      - "5434" # Exposing the different port for clarity
+#    volumes:
+#      - test-db-data:/var/lib/postgresql/data:cached
+
+#  frontend:
+#    build:
+#      context: frontend
+#      dockerfile: Dockerfile
+#    stdin_open: true
+#    volumes:
+#      - "./frontend:/app:cached"
+#      - "./frontend/node_modules:/app/node_modules:cached"
+#    environment:
+#      - NODE_ENV=development
+#    ports:
+#      - "3000:3000"
+
+#volumes:
+#  db-data:
+#  test-db-data:

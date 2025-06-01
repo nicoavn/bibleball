@@ -1,6 +1,6 @@
 FROM python:3.12
 
-RUN apt update && apt install -y postgresql-client
+# RUN apt update && apt install -y postgresql-client
 
 RUN mkdir /backend
 WORKDIR /backend
