@@ -79,7 +79,7 @@ def repeat_game(request):
 
         return JsonResponse(cloned_game.as_dict())
     except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game code provided."), status=400)
+        return HttpResponse(_("Invalid game code provided."), status=404)
 
 
 def add_team(request):
@@ -89,7 +89,7 @@ def add_team(request):
     try:
         team = Team.objects.get(id=team_id)
     except Team.DoesNotExist:
-        return HttpResponse(_("Invalid team."), status=400)
+        return HttpResponse(_("Team not found."), status=404)
 
     if not name:
         return HttpResponse(_("No name provided."), status=400)
@@ -112,12 +112,12 @@ def add_member(request):
     try:
         team = Team.objects.get(id=team_id)
     except Team.DoesNotExist:
-        return HttpResponse(_("Invalid team."), status=400)
+        return HttpResponse(_("Team not found."), status=404)
 
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game."), status=400)
+        return HttpResponse(_("Game not found."), status=404)
 
     if not name:
         return HttpResponse(_("No name provided."), status=400)
@@ -145,7 +145,7 @@ def get_next_hitter(request):
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game."), status=400)
+        return HttpResponse(_("Game not found."), status=404)
 
     next_hitter = game.get_next_hitter()
 
@@ -175,7 +175,7 @@ def pitch_question(request):
             .first()
         )
     except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game."), status=400)
+        return HttpResponse(_("Game not found."), status=404)
 
     used_questions = {
         question_id
@@ -213,12 +213,12 @@ def check_answer(request):
     try:
         game = Game.objects.get(id=game_id)
     except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game."), status=400)
+        return HttpResponse(_("Game not found."), status=404)
 
     try:
         member = Member.objects.get(id=member_id)
     except Member.DoesNotExist:
-        return HttpResponse(_("Invalid member."), status=400)
+        return HttpResponse(_("Member not found."), status=404)
 
     try:
         answer = Answer.objects.get(id=answer_id)
@@ -238,18 +238,18 @@ def get_game_board(request):
 
     game_id = request.GET.get("game_id", None)
 
-    try:
-        game = (
-            Game.objects.filter(id=game_id)
-            .prefetch_related(
-                "innings__events",
-                "team1",
-                "team2",
-            )
-            .first()
+    game = (
+        Game.objects.filter(id=game_id)
+        .prefetch_related(
+            "innings__events",
+            "team1",
+            "team2",
         )
-    except Game.DoesNotExist:
-        return HttpResponse(_("Invalid game."), status=400)
+        .first()
+    )
+
+    if not game:
+        return HttpResponse(_("Game not found."), status=404)
 
     board["game"] = game.as_dict()
     board["next_hitter"] = (
