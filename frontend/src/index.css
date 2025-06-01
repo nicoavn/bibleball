@@ -1,21 +1,21 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: flex-start;
-  width: 100%;
-  min-height: 100vh;
+    margin: 0;
+    display: flex;
+    place-items: flex-start;
+    width: 100%;
+    min-height: 100vh;
 
-  background: #1C75BC;
-  background: radial-gradient(circle, rgba(28, 117, 188, 1) 0%, rgba(21, 37, 87, 1) 100%);
+    background: #1C75BC;
+    background: radial-gradient(circle, rgba(28, 117, 188, 1) 0%, rgba(21, 37, 87, 1) 100%);
 }

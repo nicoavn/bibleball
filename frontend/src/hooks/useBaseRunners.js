@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react'
+import {useCallback, useState} from 'react';
 import {
   QUESTION_DIFFICULTY_EVENT_TYPE_MAP,
-  TYPES_MOVEMENTS_MAP
-} from '../constants.js'
+  TYPES_MOVEMENTS_MAP,
+} from '../constants.js';
 
 const emptyBases = [0, 0, 0, 0];
 
@@ -25,7 +25,7 @@ const useBaseRunners = () => {
 
     // Moving base runners
     for (let i = 2; i >= 0; i--) {
-      if (!runners[i]) continue
+      if (!runners[i]) continue;
 
       if (i + movements <= 3) {
         runners[i + movements] = 1;
@@ -34,11 +34,11 @@ const useBaseRunners = () => {
       runners[i] = 0;
     }
 
-    runners[movements - 1] = 1 // Hitter movement
+    runners[movements - 1] = 1; // Hitter movement
 
   }, [runners]);
 
-  const resetRunners = useCallback(() => setRunners([...emptyBases]), [])
+  const resetRunners = useCallback(() => setRunners([...emptyBases]), []);
 
   return {
     firstBaseRunner: runners[0] > 0,
@@ -47,7 +47,7 @@ const useBaseRunners = () => {
     scorer: runners[3] > 0,
     resetRunners,
     updateRunners,
-  }
-}
+  };
+};
 
 export default useBaseRunners;
