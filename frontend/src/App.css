@@ -32,6 +32,52 @@
     font-style: italic;
 }
 
+.top-bar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.top-bar .menu {
+    width: 36px;
+    height: 36px;
+    position: relative;
+}
+
+.top-bar .menu .icon-kebab {
+    color: white;
+    /*background: white;*/
+    /*border: 2px solid black;*/
+    /*border-radius: 2px;*/
+    cursor: pointer;
+}
+
+.top-bar .menu .actions {
+    position: absolute;
+    top: 36px;
+    right: 6px;
+    width: 140px;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.top-bar .menu .actions button {
+    padding: 12px 0;
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 16px;
+}
+
+.top-bar .menu .actions button:hover {
+    background: #eee;
+    cursor: pointer;
+}
+
 .scoreboard {
     min-height: 345px;
     background: rgba(0, 0, 0, 0.15);

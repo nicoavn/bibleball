@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, { useRef, useState } from 'react';
 import useTeamMembers from '../hooks/useTeamMembers.js';
 import useSearchHitter from '../hooks/useSearchHitter.js';
 
@@ -8,8 +8,8 @@ const TeamMemberAutocomplete = () => {
   const [isLoading, setIsLoading] = useState(false);
   const timeoutRef = useRef(null);
 
-  const {members} = useTeamMembers();
-  const {searchHitter} = useSearchHitter();
+  const { members } = useTeamMembers();
+  const { searchHitter } = useSearchHitter();
 
   // Mock API call — replace this with your real API call
   const fetchResults = async (query) => {
@@ -43,33 +43,33 @@ const TeamMemberAutocomplete = () => {
   };
 
   return (
-      <div style={{position: 'relative', width: '300px'}}>
-        <input
-            type="text"
-            value={inputValue}
-            onChange={handleChange}
-            placeholder="Type to search..."
-            style={{width: '100%', padding: '8px'}}
-        />
-        {isLoading && <div>Loading...</div>}
-        {results.length > 0 && (
-            <ul style={{
-              listStyle: 'none',
-              margin: 0,
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderTop: 'none',
-              position: 'absolute',
-              width: '100%',
-              backgroundColor: 'white',
-              zIndex: 1000,
-            }}>
-              {results.map((item, index) => (
-                  <li key={index} style={{padding: '4px 0'}}>{item}</li>
-              ))}
-            </ul>
-        )}
-      </div>
+    <div style={{ position: 'relative', width: '300px' }}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleChange}
+        placeholder="Type to search..."
+        style={{ width: '100%', padding: '8px' }}
+      />
+      {isLoading && <div>Loading...</div>}
+      {results.length > 0 && (
+        <ul style={{
+          listStyle: 'none',
+          margin: 0,
+          padding: '8px',
+          border: '1px solid #ccc',
+          borderTop: 'none',
+          position: 'absolute',
+          width: '100%',
+          backgroundColor: 'white',
+          zIndex: 1000,
+        }}>
+          {results.map((item, index) => (
+            <li key={index} style={{ padding: '4px 0' }}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 

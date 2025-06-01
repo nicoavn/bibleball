@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {API_URL} from '../constants.js';
+import { useEffect, useState } from 'react';
+import { API_URL } from '../constants.js';
 
 const useTeamMembers = () => {
   const [isLoading, setIsLoading] = useState(false);

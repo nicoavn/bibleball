@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import {
   QUESTION_DIFFICULTY_EVENT_TYPE_MAP,
   TYPES_MOVEMENTS_MAP,
