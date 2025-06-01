@@ -277,6 +277,10 @@ def get_recent_games(request):
     return JsonResponse({"games": [game.as_dict() for game in Game.objects.recent()]})
 
 
+def get_games(request):
+    return JsonResponse({"games": [game.as_dict() for game in Game.objects.all()]})
+
+
 def clone_team(request):
     team_id = request.GET.get("team_id", None)
 

@@ -19,5 +19,6 @@ urlpatterns = [
     path("team", views.get_teams, name="get_teams"),
     path("member", views.get_members, name="get_members"),
     path("recent", views.get_recent_games, name="get_recent_games"),
+    path("game", views.get_games, name="get_games"),
     path("team/clone", views.clone_team, name="clone_team"),
 ]
