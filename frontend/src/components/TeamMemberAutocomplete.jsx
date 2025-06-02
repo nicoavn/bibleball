@@ -42,34 +42,39 @@ const TeamMemberAutocomplete = () => {
     }
   };
 
+  const handleSelect = (item) => {
+    setInputValue(item);
+  };
+
   return (
-    <div style={{ position: 'relative', width: '300px' }}>
-      <input
-        type="text"
-        value={inputValue}
-        onChange={handleChange}
-        placeholder="Type to search..."
-        style={{ width: '100%', padding: '8px' }}
-      />
-      {isLoading && <div>Loading...</div>}
-      {results.length > 0 && (
-        <ul style={{
-          listStyle: 'none',
-          margin: 0,
-          padding: '8px',
-          border: '1px solid #ccc',
-          borderTop: 'none',
-          position: 'absolute',
-          width: '100%',
-          backgroundColor: 'white',
-          zIndex: 1000,
-        }}>
-          {results.map((item, index) => (
-            <li key={index} style={{ padding: '4px 0' }}>{item}</li>
-          ))}
-        </ul>
-      )}
-    </div>
+      <div style={{ position: 'relative', width: '300px' }}>
+        <input
+            type="text"
+            value={inputValue}
+            onChange={handleChange}
+            placeholder="Nombre del jugador"
+            style={{ width: '100%', padding: '8px' }}
+        />
+        {isLoading && <div>Loading...</div>}
+        {results.length > 0 && (
+            <ul style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: '8px',
+              border: '1px solid #ccc',
+              borderTop: 'none',
+              position: 'absolute',
+              width: '100%',
+              backgroundColor: 'white',
+              zIndex: 1000,
+            }}>
+              {results.map((item, index) => (
+                  <li key={index} style={{ padding: '4px 0' }}
+                      onClick={() => handleSelect(item)}>{item}</li>
+              ))}
+            </ul>
+        )}
+      </div>
   );
 };
 

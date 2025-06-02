@@ -1,19 +1,24 @@
+import { useContext } from 'react';
+import { ModalContext, ModalKeys } from '../ModalContext.jsx';
+
 const useMenuActions = () => {
+  const { setCurrentModal } = useContext(ModalContext);
+
   const actions = [
     {
-      "name": "Nuevo juego",
-      "action": () => {}
+      'text': 'Nuevo juego',
+      'action': () => setCurrentModal(ModalKeys.NewGame),
     },
     {
-      "name": "Cargar juego",
-      "action": () => {}
+      'text': 'Cargar juego',
+      'action': () => setCurrentModal(ModalKeys.LoadGame),
     },
     {
-      "name": "Manejar equipos",
-      "action": () => {}
+      'text': 'Manejar equipos',
+      'action': () => setCurrentModal(ModalKeys.ManageTeams),
     },
   ];
   return actions;
-}
+};
 
 export default useMenuActions;

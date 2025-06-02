@@ -1,6 +1,6 @@
 import './App.css';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { API_URL, MAX_INNINGS } from './constants.js';
 import useGameBoard from './hooks/useGameBoard.js';
 import useLocalStorage, { GAME_STORAGE_KEY } from './hooks/useLocalStorage.js';
@@ -9,11 +9,14 @@ import useSubmitAnswer from './hooks/useSubmitAnswer.js';
 import useBaseRunners from './hooks/useBaseRunners.js';
 import Menu from './components/Menu.jsx';
 import useMenuActions from './hooks/useMenuActions.js';
+import NewGameModal from './components/modals/NewGameModal.jsx';
+import { ModalContext, ModalKeys } from './ModalContext.jsx';
 
 function App() {
   const [packs, setPacks] = useState([]);
   const [selectedPack, setSelectedPack] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const { currentModal } = useContext(ModalContext);
   const [inningsNumber, setInningsNumber] = useState(MAX_INNINGS);
 
   const {
@@ -64,7 +67,7 @@ function App() {
       }
 
       const response = await fetch(
-        API_URL + 'start?' + new URLSearchParams(params).toString());
+          API_URL + 'start?' + new URLSearchParams(params).toString());
       const game = await response.json();
       setValue(GAME_STORAGE_KEY, game.id);
     };
@@ -78,7 +81,7 @@ function App() {
 
   const onPackSelect = useCallback((ev) => {
     setSelectedPack(
-      packs.find((pack) => pack.id === ev.currentTarget.value),
+        packs.find((pack) => pack.id === ev.currentTarget.value),
     );
   }, [packs]);
 
@@ -157,180 +160,184 @@ function App() {
   const actions = useMenuActions();
 
   return (
-    <>
-      <div className="top-bar">
-        <Menu actions={actions}/>
-      </div>
-
-      <div className="scoreboard">
-        <div className="logo"></div>
-        <div className="team-logos">
-          <div className="logo1"></div>
-          <div className="logo2"></div>
+      <>
+        <div className="top-bar">
+          <Menu actions={actions} />
         </div>
-        <div className="score-boxes">
-          {(game?.innings ?? []).map(inning => (
-            <div key={inning.id}
-                 className={'inning' + (inning.played ? ' played' : '')}>
-              <div className="score-box-heading">{inning.number}</div>
-              <div
-                className="top score-box">{`${inning.careers_team1}`.padStart(
-                2, '0')}</div>
-              <div
-                className="bottom score-box">{`${inning.careers_team2}`.padStart(
-                2, '0')}</div>
-            </div>
-          ))}
 
-          {game && (
-            <>
-              <div className="inning">
-                <div className="score-box-heading">Carreras</div>
-                <div className="top score-box">{runs_team1}</div>
-                <div className="bottom score-box">{runs_team2}</div>
-              </div>
-              <div className="outs">
-                <div className="score-box-heading">Outs</div>
-                <div className="score-box">{outs}</div>
-              </div>
-            </>
-          )}
-
-
-        </div>
-      </div>
-
-      {!!question && (
-        <div className="question-modal">
-          <div className="question-text">
-            {question.question}
+        <div className="scoreboard">
+          <div className="logo"></div>
+          <div className="team-logos">
+            <div className="logo1"></div>
+            <div className="logo2"></div>
           </div>
-          <div className="answers">
-            {question.answers.map((answer) => (
-              <button
-                className={
-                  (answer.is_correct ? 'correct' : '') +
-                  (answer.id === selectedAnswer?.id
-                    ? ' selected'
-                    : '')
-                }
-                key={answer.id}
-                onClick={() => onSubmitAnswer(answer)}
-              >{answer.answer}</button>
+          <div className="score-boxes">
+            {(game?.innings ?? []).map(inning => (
+                <div key={inning.id}
+                     className={'inning' + (inning.played ? ' played' : '')}>
+                  <div className="score-box-heading">{inning.number}</div>
+                  <div
+                      className="top score-box">{`${inning.careers_team1}`.padStart(
+                      2, '0')}</div>
+                  <div
+                      className="bottom score-box">{`${inning.careers_team2}`.padStart(
+                      2, '0')}</div>
+                </div>
             ))}
-          </div>
-          <div className="action-continue">
-            {!!selectedAnswer && (
-              <button className="btn-continue" onClick={onNextTurn}>
-                Continuar
-              </button>
+
+            {game && (
+                <>
+                  <div className="inning">
+                    <div className="score-box-heading">Carreras</div>
+                    <div className="top score-box">{runs_team1}</div>
+                    <div className="bottom score-box">{runs_team2}</div>
+                  </div>
+                  <div className="outs">
+                    <div className="score-box-heading">Outs</div>
+                    <div className="score-box">{outs}</div>
+                  </div>
+                </>
             )}
+
+
           </div>
         </div>
-      )}
 
-      <div className="field-container">
-        <div className="team-box team-1">
-          <h3>{game?.team1?.name}</h3>
+        {!!question && (
+            <div className="question-modal">
+              <div className="question-text">
+                {question.question}
+              </div>
+              <div className="answers">
+                {question.answers.map((answer) => (
+                    <button
+                        className={
+                            (answer.is_correct ? 'correct' : '') +
+                            (answer.id === selectedAnswer?.id
+                                ? ' selected'
+                                : '')
+                        }
+                        key={answer.id}
+                        onClick={() => onSubmitAnswer(answer)}
+                    >{answer.answer}</button>
+                ))}
+              </div>
+              <div className="action-continue">
+                {!!selectedAnswer && (
+                    <button className="plain btn-continue" onClick={onNextTurn}>
+                      Continuar
+                    </button>
+                )}
+              </div>
+            </div>
+        )}
 
-          <ol>
-            {
-              (game?.team1?.members ?? []).map(member => (
-                <li key={member.id}
-                    className={member.id === nextHitter.id
-                      ? 'current-hitter'
-                      : ''}>
-                  {`[${member.jersey_no}] ${member.name} (${member.nickname})`}
-                  {member.id === nextHitter.id && (
-                    <span>Al bate</span>)}
-                </li>
-              ))
-            }
-          </ol>
-        </div>
+        <div className="field-container">
+          <div className="team-box team-1">
+            <h3>{game?.team1?.name}</h3>
 
-        <div className="field">
-          <div className="wait-box wait-box-left">
-            <div className="player team-1"></div>
-            <div className="player team-1"></div>
+            <ol>
+              {
+                (game?.team1?.members ?? []).map(member => (
+                    <li key={member.id}
+                        className={member.id === nextHitter.id
+                            ? 'current-hitter'
+                            : ''}>
+                      {`[${member.jersey_no}] ${member.name} (${member.nickname})`}
+                      {member.id === nextHitter.id && (
+                          <span>Al bate</span>)}
+                    </li>
+                ))
+              }
+            </ol>
           </div>
-          <div className="wait-box wait-box-right">
-            <div className="player team-2"></div>
-            <div className="player team-2"></div>
-          </div>
 
-          {!!nextHitter && (
-            <div className={`player at-bat ${battingTeam}`}></div>
-          )}
+          <div className="field">
+            <div className="wait-box wait-box-left">
+              <div className="player team-1"></div>
+              <div className="player team-1"></div>
+            </div>
+            <div className="wait-box wait-box-right">
+              <div className="player team-2"></div>
+              <div className="player team-2"></div>
+            </div>
 
-          {!!firstBaseRunner && (
-            <div
-              className={`player running-base first ${battingTeam}`}></div>
-          )}
-
-          {!!secondBaseRunner && (
-            <div
-              className={`player running-base second ${battingTeam}`}></div>
-          )}
-
-          {!!thirdBaseRunner && (
-            <div
-              className={`player running-base third ${battingTeam}`}></div>
-          )}
-
-          {!!scorer && (
-            <div
-              className={`player running-base scores ${battingTeam}`}></div>
-          )}
-
-          <div className="container-actions">
-            {!game && (
-              <>
-                <select name="pack" id="pack" onChange={onPackSelect}>
-                  {packs.map((pack) => (
-                    <option key={pack.id}
-                            value={pack.id}>{pack.name}</option>))}
-                </select>
-                <select name="innings" id="innings"
-                        onChange={onPlayingInningsSelect}>
-                  {[...Array(MAX_INNINGS + 1).keys()].slice(1).
-                    reverse().
-                    map((i) => (
-                      <option key={i} value={i}>{i}</option>
-                    ))}
-                </select>
-                <button onClick={onStartGame}>Iniciar Partido</button>
-              </>
+            {!!nextHitter && (
+                <div className={`player at-bat ${battingTeam}`}></div>
             )}
-            {
-              !!game && (
-                <button onClick={onPitchClick}
-                        className="btn-pitch">¡Lanzar!</button>
-              )
-            }
+
+            {!!firstBaseRunner && (
+                <div
+                    className={`player running-base first ${battingTeam}`}></div>
+            )}
+
+            {!!secondBaseRunner && (
+                <div
+                    className={`player running-base second ${battingTeam}`}></div>
+            )}
+
+            {!!thirdBaseRunner && (
+                <div
+                    className={`player running-base third ${battingTeam}`}></div>
+            )}
+
+            {!!scorer && (
+                <div
+                    className={`player running-base scores ${battingTeam}`}></div>
+            )}
+
+            <div className="container-actions">
+              {!game && (
+                  <>
+                    <select name="pack" id="pack" onChange={onPackSelect}>
+                      {packs.map((pack) => (
+                          <option key={pack.id}
+                                  value={pack.id}>{pack.name}</option>))}
+                    </select>
+                    <select name="innings" id="innings"
+                            onChange={onPlayingInningsSelect}>
+                      {[...Array(MAX_INNINGS + 1).keys()].slice(1).
+                          reverse().
+                          map((i) => (
+                              <option key={i} value={i}>{i}</option>
+                          ))}
+                    </select>
+                    <button onClick={onStartGame}>Iniciar Partido</button>
+                  </>
+              )}
+              {
+                  !!game && (
+                      <button onClick={onPitchClick}
+                              className="btn-pitch">¡Lanzar!</button>
+                  )
+              }
+            </div>
+          </div>
+
+          <div className="team-box team-2">
+            <h3>{game?.team2?.name}</h3>
+
+            <ol>
+              {
+                (game?.team2?.members ?? []).map(member => (
+                    <li key={member.id}
+                        className={member.id === nextHitter.id
+                            ? 'current-hitter'
+                            : ''}>
+                      {`[${member.jersey_no}] ${member.name} (${member.nickname})`}
+                      {member.id === nextHitter.id && (
+                          <span>Al bate</span>)}
+                    </li>
+                ))
+              }
+            </ol>
           </div>
         </div>
 
-        <div className="team-box team-2">
-          <h3>{game?.team2?.name}</h3>
-
-          <ol>
-            {
-              (game?.team2?.members ?? []).map(member => (
-                <li key={member.id}
-                    className={member.id === nextHitter.id
-                      ? 'current-hitter'
-                      : ''}>
-                  {`[${member.jersey_no}] ${member.name} (${member.nickname})`}
-                  {member.id === nextHitter.id && (
-                    <span>Al bate</span>)}
-                </li>
-              ))
-            }
-          </ol>
-        </div>
-      </div>
-    </>
+        {currentModal === ModalKeys.NewGame && (
+            <NewGameModal />
+        )}
+      </>
   );
 }
 
