@@ -24,56 +24,59 @@ export const classFromActionType = (type) => {
   }
 };
 
-const Modal = ({
-  modalHeading,
-  actions,
-  bodyContents,
-}) => {
-  const [isOpen, setIsOpen] = React.useState(true); // TODO: set false
+const Modal = ({ actions, bodyContents, modalHeading }) => {
+  const { closeModal } = useContext(ModalContext);
+
   const modalRef = useRef(null);
 
-  useCloseOnOutsideClick(modalRef, () => setIsOpen(false));
+  useCloseOnOutsideClick(modalRef, () => closeModal());
   const { setCurrentModal } = useContext(ModalContext);
 
   const onCloseClick = () => {
-    setIsOpen(false);
+    closeModal();
     setCurrentModal(null);
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-      <div className="modal-container">
-        <div className="modal" ref={modalRef}>
-          <div className="modal-header">
-            {modalHeading && <h3>{modalHeading}</h3>}
-            <button className="plain close" onClick={onCloseClick}>
-              <IconClose />
-            </button>
+    <div className="modal-container">
+      <div className="modal" ref={modalRef}>
+        <div className="modal-header">
+          {modalHeading && <h3>{modalHeading}</h3>}
+          <button className="plain close" onClick={onCloseClick}>
+            <IconClose />
+          </button>
+        </div>
+        <div className="modal-body">{bodyContents}</div>
+        <div className="modal-footer">
+          <div className="actions-left">
+            {(actions || [])
+              .filter((action) => action.isLeftAction)
+              .map((action, index) => (
+                <button
+                  key={`${action.type}-${index}`}
+                  className={`${classFromActionType(action.type)}`}
+                  onClick={action.action}
+                >
+                  {action.text}
+                </button>
+              ))}
           </div>
-          <div className="modal-body">{bodyContents}</div>
-          <div className="modal-footer">
-            <div className="actions-left">
-              {(actions || []).filter(action => action.isLeftAction).
-                  map((action, index) => (
-                      <button key={`${action.type}-${index}`}
-                              className={`${classFromActionType(action.type)}`}
-                              onClick={action.action}>{action.text}</button>
-                  ))}
-            </div>
-            <div className="actions-right">
-              {(actions || []).filter(action => !action.isLeftAction).
-                  map((action, index) => (
-                      <button key={`${action.type}-${index}`}
-                              className={`${classFromActionType(action.type)}`}
-                              onClick={action.action}>{action.text}</button>
-                  ))}
-            </div>
+          <div className="actions-right">
+            {(actions || [])
+              .filter((action) => !action.isLeftAction)
+              .map((action, index) => (
+                <button
+                  key={`${action.type}-${index}`}
+                  className={`${classFromActionType(action.type)}`}
+                  onClick={action.action}
+                >
+                  {action.text}
+                </button>
+              ))}
           </div>
         </div>
       </div>
+    </div>
   );
 };
 

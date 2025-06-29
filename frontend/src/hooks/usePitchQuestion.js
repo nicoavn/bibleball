@@ -11,7 +11,8 @@ const usePitchQuestion = (gameId) => {
       game_id: gameId,
     };
     const response = await fetch(
-        API_URL + 'pitch?' + new URLSearchParams(params).toString());
+      API_URL + 'pitch?' + new URLSearchParams(params).toString()
+    );
     const pitch = await response.json();
     setQuestion(pitch);
   }, [gameId]);

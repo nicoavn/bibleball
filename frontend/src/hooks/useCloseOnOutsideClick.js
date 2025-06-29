@@ -3,8 +3,7 @@ import { useEffect } from 'react';
 const useCloseOnOutsideClick = (componentRef, closeHandler) => {
   useEffect(() => {
     function handleClickOutside(event) {
-      if (componentRef.current &&
-          !componentRef.current.contains(event.target)) {
+      if (componentRef.current && !componentRef.current.contains(event.target)) {
         closeHandler();
       }
     }

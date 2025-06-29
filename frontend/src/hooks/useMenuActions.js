@@ -6,16 +6,16 @@ const useMenuActions = () => {
 
   const actions = [
     {
-      'text': 'Nuevo juego',
-      'action': () => setCurrentModal(ModalKeys.NewGame),
+      text: 'Nuevo juego',
+      action: () => setCurrentModal(ModalKeys.NewGame),
     },
     {
-      'text': 'Cargar juego',
-      'action': () => setCurrentModal(ModalKeys.LoadGame),
+      text: 'Cargar juego',
+      action: () => setCurrentModal(ModalKeys.LoadGame),
     },
     {
-      'text': 'Manejar equipos',
-      'action': () => setCurrentModal(ModalKeys.ManageTeams),
+      text: 'Manejar equipos',
+      action: () => setCurrentModal(ModalKeys.ManageTeams),
     },
   ];
   return actions;

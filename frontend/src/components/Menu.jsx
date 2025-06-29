@@ -14,20 +14,23 @@ const Menu = ({ actions }) => {
   };
 
   return (
-      <div className="menu" ref={menuRef}>
-        <IconKebab className="icon-kebab" onClick={() => setIsOpen(!isOpen)} />
+    <div className="menu" ref={menuRef}>
+      <IconKebab className="icon-kebab" onClick={() => setIsOpen(!isOpen)} />
 
-        {isOpen && (
-            <div className="actions">
-              {actions.map((action, index) => (
-                  <button key={`action-${index}`}
-                          className="plain"
-                          onClick={() => handleClick(
-                              index)}>{action.text}</button>
-              ))}
-            </div>
-        )}
-      </div>
+      {isOpen && (
+        <div className="actions">
+          {actions.map((action, index) => (
+            <button
+              key={`action-${index}`}
+              className="plain"
+              onClick={() => handleClick(index)}
+            >
+              {action.text}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

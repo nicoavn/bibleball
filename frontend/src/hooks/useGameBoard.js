@@ -12,7 +12,8 @@ const useGameBoard = (gameId) => {
       game_id: gameId,
     };
     const response = await fetch(
-        API_URL + 'board?' + new URLSearchParams(params).toString());
+      API_URL + 'board?' + new URLSearchParams(params).toString()
+    );
     const gameBoard = await response.json();
     setGame(gameBoard.game);
     setNextHitter(gameBoard.next_hitter);
@@ -23,7 +24,9 @@ const useGameBoard = (gameId) => {
   }, [fetchBoard]);
 
   return {
-    fetch: fetchBoard, game, nextHitter,
+    fetch: fetchBoard,
+    game,
+    nextHitter,
   };
 };
 

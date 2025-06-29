@@ -17,6 +17,7 @@ urlpatterns = [
     path("board", views.get_game_board, name="get_game_board"),
     path("pack", views.get_packs, name="get_packs"),
     path("team", views.get_teams, name="get_teams"),
+    path("team/save", views.save_team, name="save_team"),
     path("member", views.get_members, name="get_members"),
     path("recent", views.get_recent_games, name="get_recent_games"),
     path("game", views.get_games, name="get_games"),

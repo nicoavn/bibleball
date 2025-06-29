@@ -16,31 +16,39 @@ const useLocalStorage = () => {
     });
   }, []);
 
-  const getValue = useCallback((key, defaultValue = null) => {
-    const value = localStorage.getItem(key);
+  const getValue = useCallback(
+    (key, defaultValue = null) => {
+      const value = localStorage.getItem(key);
 
-    if (value === null) return defaultValue;
+      if (value === null) return defaultValue;
 
-    switch (typesMap[key]) {
-      case 'symbol':
-      case 'function':
-      case 'object':
-      case 'boolean':
-        return JSON.parse(value);
-      case 'number':
-        return Number(value);
-      case 'bigint':
-        return BigInt(value);
-      case 'undefined':
-      case 'string':
-      default:
-        return value;
-    }
-  }, [typesMap]);
+      switch (typesMap[key]) {
+        case 'symbol':
+        case 'function':
+        case 'object':
+        case 'boolean':
+          return JSON.parse(value);
+        case 'number':
+          return Number(value);
+        case 'bigint':
+          return BigInt(value);
+        case 'undefined':
+        case 'string':
+        default:
+          return value;
+      }
+    },
+    [typesMap]
+  );
+
+  const clearValue = useCallback((key) => {
+    localStorage.removeItem(key);
+  }, []);
 
   return {
-    setValue,
+    clearValue,
     getValue,
+    setValue,
   };
 };
 

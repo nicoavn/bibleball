@@ -1,7 +1,9 @@
+import json
 import random
 
 from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.csrf import csrf_exempt
 
 from game.models import (
     Game,
@@ -82,12 +84,19 @@ def repeat_game(request):
         return HttpResponse(_("Invalid game code provided."), status=404)
 
 
-def add_team(request):
-    name = request.GET.get("name", None)
-    team_id = request.GET.get("team_id", None)
+@csrf_exempt
+def save_team(request):
+    print("request.POST", request.POST)
+    data = json.loads(request.body.decode("utf-8"))
+    name = data.get("name", None)
+    team_id = data.get("team_id", None)
+    members = data.get("members", None)
+
+    if not members:
+        return HttpResponse(_("No members provided."), status=400)
 
     try:
-        team = Team.objects.get(id=team_id)
+        team = Team.objects.get(id=team_id) if team_id else Team()
     except Team.DoesNotExist:
         return HttpResponse(_("Team not found."), status=404)
 
@@ -96,6 +105,19 @@ def add_team(request):
 
     team.name = name
     team.save()
+
+    for member in members:
+        created_member = Member.objects.create(
+            **{
+                "name": member.get("name", None),
+                "nickname": member.get("nickname", None),
+                "jersey_no": member.get("jerseyNo", None),
+            }
+        )
+
+        team.teammember_set.add(
+            TeamMember.objects.create(member=created_member, team=team)
+        )
 
     return JsonResponse(team.as_dict())
 
@@ -288,6 +310,6 @@ def clone_team(request):
         cloning_team = Team.objects.get(id=team_id)
         cloned_team = cloning_team.clone()
 
-        return JsonResponse({"team": cloned_team.as_dict()})
+        return JsonResponse(cloned_team.as_dict())
     except Team.DoesNotExist:
         return HttpResponse(_("Invalid Team."), status=400)

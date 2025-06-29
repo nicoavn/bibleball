@@ -29,3 +29,22 @@ export const TYPES_MOVEMENTS_MAP = {
   [EventType.H3]: 3,
   [EventType.H4]: 4,
 };
+
+export const EVENT_TYPE_LABEL_MAP = {
+  [EventType.H1]: 'Sencillo',
+  [EventType.H2]: 'Doble',
+  [EventType.H3]: 'Triple',
+  [EventType.H4]: 'Jonrón',
+  [EventType.OUT]: 'Out',
+};
+
+export const EmptyMember = { name: '', nickname: '', jerseyNo: 0 };
+
+export const EmptyGame = {
+  pack: null,
+  team1: null,
+  team2: null,
+  short_code: '',
+  timer_seconds: 30,
+  innings: [],
+};

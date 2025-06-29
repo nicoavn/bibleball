@@ -11,7 +11,6 @@ const TeamMemberAutocomplete = () => {
   const { members } = useTeamMembers();
   const { searchHitter } = useSearchHitter();
 
-  // Mock API call — replace this with your real API call
   const fetchResults = async (query) => {
     setIsLoading(true);
     try {
@@ -25,7 +24,7 @@ const TeamMemberAutocomplete = () => {
     }
   };
 
-  const handleChange = (e) => {
+  const onChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
 
@@ -47,34 +46,41 @@ const TeamMemberAutocomplete = () => {
   };
 
   return (
-      <div style={{ position: 'relative', width: '300px' }}>
-        <input
-            type="text"
-            value={inputValue}
-            onChange={handleChange}
-            placeholder="Nombre del jugador"
-            style={{ width: '100%', padding: '8px' }}
-        />
-        {isLoading && <div>Loading...</div>}
-        {results.length > 0 && (
-            <ul style={{
-              listStyle: 'none',
-              margin: 0,
-              padding: '8px',
-              border: '1px solid #ccc',
-              borderTop: 'none',
-              position: 'absolute',
-              width: '100%',
-              backgroundColor: 'white',
-              zIndex: 1000,
-            }}>
-              {results.map((item, index) => (
-                  <li key={index} style={{ padding: '4px 0' }}
-                      onClick={() => handleSelect(item)}>{item}</li>
-              ))}
-            </ul>
-        )}
-      </div>
+    <div style={{ position: 'relative', width: '300px' }}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={onChange}
+        placeholder="Nombre del jugador"
+        style={{ width: '100%', padding: '8px' }}
+      />
+      {isLoading && <div>Loading...</div>}
+      {results.length > 0 && (
+        <ul
+          style={{
+            listStyle: 'none',
+            margin: 0,
+            padding: '8px',
+            border: '1px solid #ccc',
+            borderTop: 'none',
+            position: 'absolute',
+            width: '100%',
+            backgroundColor: 'white',
+            zIndex: 1000,
+          }}
+        >
+          {results.map((item, index) => (
+            <li
+              key={index}
+              style={{ padding: '4px 0' }}
+              onClick={() => handleSelect(item)}
+            >
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 
