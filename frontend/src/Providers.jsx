@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { EmptyGame } from './constants.js';
+import { EmptyBases, EmptyGame } from './constants.js';
 
 const initialState = {
   forms: {
@@ -27,6 +27,8 @@ const initialState = {
     },
   },
   game: EmptyGame,
+  nextHitter: null,
+  runners: EmptyBases,
 };
 
 const AppContext = createContext(initialState);

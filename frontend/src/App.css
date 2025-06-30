@@ -175,11 +175,14 @@ input[type="email"] {
     align-items: center;
 }
 
-.score-boxes .inning.played .top {
+.score-boxes .inning.total-scores .score-box,
+.score-boxes .inning.current-inning .score-box,
+.score-boxes .inning.played .score-box {
     color: #FFFFFF;
 }
 
-.score-boxes .inning.played .bottom {
+.score-boxes .inning.current-inning.top .top,
+.score-boxes .inning.current-inning.bottom .bottom {
     color: #FBB040;
 }
 

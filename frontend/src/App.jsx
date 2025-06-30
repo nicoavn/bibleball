@@ -20,52 +20,34 @@ import { ModalContext, ModalKeys } from './ModalContext.jsx';
 import { useAppContext } from './Providers.jsx';
 import { shuffleArray } from './helpers.js';
 
+const TEAM_1 = 'team-1';
+const TEAM_2 = 'team-2';
+
 function App() {
   const [packs, setPacks] = useState([]);
   const [selectedPack, setSelectedPack] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const { currentModal } = useContext(ModalContext);
-  const { appState, setAppState } = useAppContext();
   const [inningsNumber, setInningsNumber] = useState(MAX_INNINGS);
+
+  const { appState } = useAppContext();
+  const { currentModal } = useContext(ModalContext);
 
   const { setValue, getValue } = useLocalStorage();
 
   const gameId = getValue(GAME_STORAGE_KEY);
 
-  const { fetch: fetchBoard, game: freshGame, nextHitter } = useGameBoard(gameId);
-
-  const { game } = appState ?? {};
-
-  useEffect(() => {
-    setAppState((currentState) => ({
-      ...currentState,
-      game: freshGame,
-    }));
-  }, [freshGame]);
-
+  const { fetch: fetchBoard } = useGameBoard(gameId);
   const { pitch, question, reset: resetQuestion } = usePitchQuestion(gameId);
-
-  // TODO: Remove debug logging
-  // eslint-disable-next-line no-console
-  console.log(
-    'selectedAnswer',
-    JSON.parse(JSON.stringify(selectedAnswer ?? `undefined var: (selectedAnswer)`))
-  );
-
-  // TODO: Remove debug logging
-  // eslint-disable-next-line no-console
-  console.log(
-    'question',
-    JSON.parse(JSON.stringify(question ?? `undefined var: (question)`))
-  );
-
   const { submitAnswer } = useSubmitAnswer(gameId);
+
+  const { game, nextHitter } = appState ?? {};
 
   const {
     firstBaseRunner,
     secondBaseRunner,
     thirdBaseRunner,
     scorer,
+    clearScorer,
     resetRunners,
     updateRunners,
   } = useBaseRunners();
@@ -133,6 +115,7 @@ function App() {
 
   const onNextTurn = useCallback(async () => {
     resetQuestion();
+    clearScorer();
     setSelectedAnswer(null);
     await fetchBoard();
   }, [fetchBoard, resetQuestion]);
@@ -150,28 +133,50 @@ function App() {
     fetchPacks();
   }, []);
 
-  const { isTop, runs_team1, runs_team2, outs } = useMemo(() => {
+  // TODO: Remove debug logging
+  // eslint-disable-next-line no-console
+  console.log('game', JSON.parse(JSON.stringify(game ?? `undefined var: (game)`)));
+
+  const { currentInningIndex, isTop, runs_team1, runs_team2, outs } = useMemo(() => {
+    let currentInningIndex = 0;
     let runs_team1 = 0;
     let runs_team2 = 0;
     let outs = 0;
     let isTop = true;
+    let isStartingInning = false;
 
-    (game?.innings ?? [])
-      .filter((inning) => inning.played)
-      .forEach((inning) => {
-        runs_team1 += inning.careers_team1;
-        runs_team2 += inning.careers_team2;
+    const playedInnings = (game?.innings ?? []).filter((inning) => inning.played);
 
-        if (inning.outs_team1 < 3) {
-          outs = inning.outs_team1;
-          isTop = true;
-        } else {
-          outs = inning.outs_team2;
-          isTop = false;
-        }
-      });
+    const lastIndex = playedInnings.length - 1;
+
+    playedInnings.forEach((inning, index) => {
+      runs_team1 += inning.careers_team1;
+      runs_team2 += inning.careers_team2;
+
+      if (index !== lastIndex) {
+        return;
+      }
+
+      if (inning.outs_team2 === 3) {
+        outs = 0;
+        isTop = true;
+        isStartingInning = true;
+      } else if (inning.outs_team1 < 3) {
+        outs = inning.outs_team1;
+        isTop = true;
+      } else {
+        outs = inning.outs_team2;
+        isTop = false;
+      }
+      currentInningIndex = index;
+    });
+
+    if (isStartingInning) {
+      currentInningIndex += 1;
+    }
 
     return {
+      currentInningIndex,
       isTop,
       runs_team1,
       runs_team2,
@@ -179,7 +184,7 @@ function App() {
     };
   }, [game]);
 
-  const battingTeam = isTop ? 'team-1' : 'team-2';
+  const battingTeam = isTop ? TEAM_1 : TEAM_2;
 
   useEffect(() => {
     console.log('resetting :)');
@@ -222,16 +227,21 @@ function App() {
           <div className="logo2"></div>
         </div>
         <div className="score-boxes">
-          {(game?.innings ?? []).map((inning) => (
+          {(game?.innings ?? []).map((inning, index) => (
             <div
               key={inning.id}
-              className={'inning' + (inning.played ? ' played' : '')}
+              className={
+                'inning' +
+                (isTop ? ' top' : ' bottom') +
+                (inning.played ? ' played' : '') +
+                (currentInningIndex === index ? ' current-inning' : '')
+              }
             >
               <div className="score-box-heading">{inning.number}</div>
-              <div className="top score-box">
+              <div className={'top score-box'}>
                 {`${inning.careers_team1}`.padStart(2, '0')}
               </div>
-              <div className="bottom score-box">
+              <div className={'bottom score-box'}>
                 {`${inning.careers_team2}`.padStart(2, '0')}
               </div>
             </div>
@@ -239,7 +249,7 @@ function App() {
 
           {game && (
             <>
-              <div className="inning">
+              <div className="inning total-scores">
                 <div className="score-box-heading">Carreras</div>
                 <div className="top score-box">{runs_team1}</div>
                 <div className="bottom score-box">{runs_team2}</div>

@@ -8,7 +8,7 @@ from django.db.models import UniqueConstraint, Q
 from django.forms import model_to_dict
 from django.utils.translation import gettext_lazy as _
 
-from game.managers import GameQuerySet, MemberQuerySet
+from game.managers import GameQuerySet, MemberQuerySet, GameEventQuerySet
 
 
 class BaseModel(models.Model):
@@ -219,6 +219,8 @@ class GameEvent(BaseModel):
         choices=EventType,
     )
 
+    objects = GameEventQuerySet.as_manager()
+
     def __str__(self):
         return f"({self.inning.number}) {self.type} | {self.member}"
 
@@ -295,7 +297,8 @@ class Game(BaseModel):
             **self.id_timestamps_dict(),
         }
 
-    def _next_short_code(self) -> str:
+    @staticmethod
+    def _next_short_code() -> str:
         date, month, year = dt.now().strftime("%-d/%-m/%Y").split("/")
         month_char = chr(int(month) + 64).__str__()
         short_code_base = f"{month_char}{date}{year}"
@@ -339,27 +342,27 @@ class Game(BaseModel):
         return game_event
 
     def update_game(self, game_event: GameEvent):
-        produced_careers = self.get_produced_careers(game_event.inning)
-
         hit = 1 if game_event.type != GameEvent.EventType.OUT else 0
         out = 1 if game_event.type == GameEvent.EventType.OUT else 0
         if self.team1.has_member(game_event.member_id):
+            produced_careers = self.get_produced_careers(game_event.inning, self.team1)
             game_event.inning.careers_team1 = produced_careers
             game_event.inning.hits_team1 += hit
             game_event.inning.outs_team1 += out
         else:
+            produced_careers = self.get_produced_careers(game_event.inning, self.team2)
             game_event.inning.careers_team2 = produced_careers
             game_event.inning.hits_team2 += hit
             game_event.inning.outs_team2 += out
 
         game_event.inning.save()
 
-    def get_produced_careers(self, inning):
+    def get_produced_careers(self, inning, team):
         produced_careers = 0
 
         hitters_stack = [0, 0, 0, 0]
         index = 0
-        for event in inning.events.all():
+        for event in inning.events.from_team(team):
             if event.type == GameEvent.EventType.OUT:
                 continue
 
@@ -392,11 +395,7 @@ class Game(BaseModel):
         if not subject_team:
             return None
 
-        team_events = list(
-            filter(
-                lambda ev: subject_team.has_member(ev.member_id), inning.events.all()
-            )
-        )
+        team_events = list(GameEvent.objects.from_team(subject_team))
         if not team_events:
             return subject_team.members.first()
         last_event = team_events[-1]

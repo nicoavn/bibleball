@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { API_URL } from '../constants.js';
+import { useAppContext } from '../Providers.jsx';
 
 const useGameBoard = (gameId) => {
-  const [game, setGame] = useState(null);
-  const [nextHitter, setNextHitter] = useState(null);
+  const { setAppState } = useAppContext();
 
   const fetchBoard = useCallback(async () => {
     if (!gameId) return;
@@ -15,18 +15,21 @@ const useGameBoard = (gameId) => {
       API_URL + 'board?' + new URLSearchParams(params).toString()
     );
     const gameBoard = await response.json();
-    setGame(gameBoard.game);
-    setNextHitter(gameBoard.next_hitter);
-  }, [gameId]);
+    setAppState((currentAppState) => ({
+      ...currentAppState,
+      game: gameBoard.game,
+      nextHitter: gameBoard.next_hitter,
+    }));
+  }, [gameId, setAppState]);
 
   useEffect(() => {
-    fetchBoard();
+    (async () => {
+      await fetchBoard();
+    })();
   }, [fetchBoard]);
 
   return {
     fetch: fetchBoard,
-    game,
-    nextHitter,
   };
 };
 

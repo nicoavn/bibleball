@@ -17,3 +17,8 @@ class MemberQuerySet(QuerySet):
             | Q(nickname__icontains=hint)
             | Q(jersey_no__icontains=hint)
         )
+
+
+class GameEventQuerySet(QuerySet):
+    def from_team(self, team):
+        return self.filter(member__teammember__team=team)

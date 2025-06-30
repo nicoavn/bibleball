@@ -1,19 +1,27 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
+
 import {
+  EmptyBases,
   QUESTION_DIFFICULTY_EVENT_TYPE_MAP,
   TYPES_MOVEMENTS_MAP,
 } from '../constants.js';
-
-const emptyBases = [0, 0, 0, 0];
+import { useAppContext } from '../Providers.jsx';
 
 const useBaseRunners = () => {
-  const [runners, setRunners] = useState([...emptyBases]);
+  const { appState, setAppState } = useAppContext();
 
-  // TODO: Remove debug logging
+  const { runners } = appState;
 
-  console.log(
-    'runners',
-    JSON.parse(JSON.stringify(runners ?? `undefined var: (runners)`))
+  console.log(appState ?? `undefined var: (appState)`);
+
+  const setRunners = useCallback(
+    (nextRunners) => {
+      setAppState((currentAppState) => ({
+        ...currentAppState,
+        runners: nextRunners,
+      }));
+    },
+    [setAppState]
   );
 
   const updateRunners = useCallback(
@@ -48,17 +56,38 @@ const useBaseRunners = () => {
       console.log('Step 7');
       runners[movements - 1] = 1; // Hitter movement
       console.log('Step 8');
+
+      // TODO: Remove debug logging
+      // eslint-disable-next-line no-console
+      console.log(
+        'runners inside',
+        JSON.parse(JSON.stringify(runners ?? `undefined var: (runners)`))
+      );
     },
-    [runners]
+    [runners, setRunners]
   );
 
-  const resetRunners = useCallback(() => setRunners([...emptyBases]), []);
+  const clearScorer = useCallback(() => {
+    const nextRunners = [...runners];
+    nextRunners[3] = 0;
+    setRunners(nextRunners);
+  }, [runners]);
+
+  const resetRunners = useCallback(() => setRunners([...EmptyBases]), []);
+
+  // TODO: Remove debug logging
+  // eslint-disable-next-line no-console
+  console.log(
+    'outside runners',
+    JSON.parse(JSON.stringify(runners ?? `undefined var: (runners)`))
+  );
 
   return {
     firstBaseRunner: runners[0] > 0,
     secondBaseRunner: runners[1] > 0,
     thirdBaseRunner: runners[2] > 0,
     scorer: runners[3] > 0,
+    clearScorer,
     resetRunners,
     updateRunners,
   };

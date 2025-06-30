@@ -48,3 +48,5 @@ export const EmptyGame = {
   timer_seconds: 30,
   innings: [],
 };
+
+export const EmptyBases = [0, 0, 0, 0];
