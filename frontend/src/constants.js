@@ -1,4 +1,4 @@
-export const API_URL = 'http://localhost:8000/game/';
+export const API_URL = 'http://localhost:80/game/';
 export const MAX_INNINGS = 5;
 
 export const Difficulty = {
