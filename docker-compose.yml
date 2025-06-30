@@ -9,7 +9,7 @@ services:
       - ./backend:/backend/:cached
       - ./.docker/.ipython:/root/.ipython:cached
     ports:
-      - "80:80"
+      - "10000:10000"
     environment:
       PYTHONPATH: .
 #      DB_NAME: bibleball_db

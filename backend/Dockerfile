@@ -22,7 +22,7 @@ RUN python -m pip install --no-cache-dir -r /backend/requirements.txt
 COPY . /backend/
 
 # Expose the Django port
-EXPOSE 8000
+EXPOSE 10000
 
 COPY ./docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
