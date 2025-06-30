@@ -37,7 +37,6 @@ export const AppContextProvider = ({ children }) => {
   const [appState, setAppState] = useState(initialState);
 
   // TODO: Remove debug logging
-
   console.log(
     'appState',
     JSON.parse(JSON.stringify(appState ?? `undefined var: (appState)`))
