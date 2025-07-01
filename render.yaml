@@ -8,7 +8,11 @@ services:
   - type: web
     plan: free
     name: bibleball
+    env: docker
+    repo: https://github.com/nicoavn/bibleball
+    branch: main
     runtime: python
+    dockerfilePath: backend/Dockerfile_render
     buildCommand: './build.sh'
     envVars:
       - key: DATABASE_URL
@@ -19,3 +23,5 @@ services:
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
+      - key: DEBUG
+        value: "False"
