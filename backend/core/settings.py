@@ -27,9 +27,19 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "bibleball.onrender.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "bibleball.onrender.com",
+    "bibleball-fe.onrender.com",
+]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "https://bibleball.onrender.com"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://bibleball.onrender.com",
+    "https://bibleball-fe.onrender.com/",
+]
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 # Application definition
@@ -86,22 +96,23 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 DATABASES = {
     # "default": {
-    # "ENGINE": "django.db.backends.postgresql",
-    # "NAME": os.environ.get("DB_NAME", "bibleball_db"),
-    # "USER": os.environ.get("DB_USER", "bibleball_user"),
-    # "PASSWORD": os.environ.get("DB_PASSWORD", "bibleball_password"),
-    # "HOST": os.environ.get("DB_HOST", "localhost"),
-    # "PORT": "5432",
-    # }
-    "default": dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-    )
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": BASE_DIR / "bibleball.sqlite3",
-    # }
+    #     "ENGINE": "django.db.backends.postgresql",
+    #     "NAME": os.environ.get("DB_NAME", "bibleball_db"),
+    #     "USER": os.environ.get("DB_USER", "bibleball_user"),
+    #     "PASSWORD": os.environ.get("DB_PASSWORD", "bibleball_password"),
+    #     "HOST": os.environ.get("DB_HOST", "localhost"),
+    #     "PORT": "5432",
+    # },
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "bibleball.sqlite3",
+    },
 }
+
+# DATABASES["default"] = dj_database_url.config(
+#     default=DATABASE_URL,
+#     conn_max_age=600,
+# )
 
 
 # Password validation
