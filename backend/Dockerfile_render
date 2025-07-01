@@ -1,25 +1,19 @@
-# Start from Python base image
-FROM python:3.12-alpine
+FROM python:3.12
 
-# Set environment variables
+RUN mkdir /backend
+WORKDIR /backend
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Set work directory
-WORKDIR /backend
+COPY requirements.txt /backend
 
-# Install dependencies
-COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN python -m pip install --no-cache-dir -r /backend/requirements.txt
 
-# Copy project
-COPY . .
+COPY . /backend/
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Port (for Render)
+# Expose the Django port
 EXPOSE 10000
 
 # Start the app
