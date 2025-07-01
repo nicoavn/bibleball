@@ -1,0 +1,22 @@
+databases:
+  - name: "Bibleball DB"
+    plan: free
+    databaseName: bibleball_db
+    user: bibleball_user
+
+services:
+  - type: web
+    plan: free
+    name: bibleball
+    runtime: python
+    buildCommand: './build.sh'
+    startCommand: 'python -m gunicorn core.asgi:application -k uvicorn.workers.UvicornWorker'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: "Bibleball DB"
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
