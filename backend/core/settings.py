@@ -82,6 +82,8 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
 DATABASES = {
     # "default": {
     # "ENGINE": "django.db.backends.postgresql",
@@ -92,7 +94,7 @@ DATABASES = {
     # "PORT": "5432",
     # }
     "default": dj_database_url.config(
-        default="postgresql://bibleball_user:QsOgcVL6gBTvZg4yvJQX9JOScfV02Evo@dpg-d1hje7ali9vc738fuua0-a/bibleball_db",
+        default=DATABASE_URL,
         conn_max_age=600,
     )
     # "default": {
