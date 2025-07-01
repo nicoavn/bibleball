@@ -66,7 +66,7 @@ const TeamForm = ({ teamIndex }) => {
         <button
           className="btn btn-secondary"
           type="button"
-          onClick={() => append(emptyMember)}
+          onClick={() => append(EmptyMember)}
         >
           Añadir jugador
         </button>
