@@ -38,7 +38,7 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://bibleball.onrender.com",
-    "https://bibleball-fe.onrender.com/",
+    "https://bibleball-fe.onrender.com",
 ]
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
