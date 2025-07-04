@@ -94,7 +94,10 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://bibleball_user:QsOgcVL6gBTvZg4yvJQX9JOScfV02Evo@dpg-d1hje7ali9vc738fuua0-a.virginia-postgres.render.com/bibleball_db",
+)
 
 DATABASES = {
     # "default": {
