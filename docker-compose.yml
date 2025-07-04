@@ -4,6 +4,7 @@ services:
       context: backend
       dockerfile: Dockerfile
     entrypoint: "/docker-entrypoint.sh"
+    env_file: "backend/.docker.env"
     tty: true
     volumes:
       - ./backend:/backend/:cached

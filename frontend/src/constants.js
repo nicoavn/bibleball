@@ -1,4 +1,5 @@
 export const API_URL = 'https://bibleball.onrender.com/game/';
+// export const API_URL = 'http://localhost:10000/game/';
 export const MAX_INNINGS = 5;
 
 export const Difficulty = {

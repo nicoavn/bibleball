@@ -9,7 +9,9 @@ const useSubmitAnswer = (gameId) => {
         game_id: gameId,
         member_id: memberId,
       };
-      await fetch(API_URL + 'check-answer?' + new URLSearchParams(params).toString());
+      return await fetch(
+        API_URL + 'check-answer?' + new URLSearchParams(params).toString()
+      );
     },
     [gameId]
   );

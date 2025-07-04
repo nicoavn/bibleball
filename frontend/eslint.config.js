@@ -27,8 +27,9 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'prettier/prettier': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
