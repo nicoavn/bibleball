@@ -53,37 +53,33 @@ function App() {
     updateRunners,
   } = useBaseRunners();
 
-  const onStartGame = useCallback(() => {
+  const onStartGame = useCallback(async () => {
     if (!selectedPack) {
       return;
     }
 
-    const fetchGame = async () => {
-      const params = {};
+    const params = {};
 
-      if (gameId) {
-        params['game_id'] = gameId;
-      } else {
-        params['innings_number'] = inningsNumber;
-        params['pack_id'] = selectedPack.id;
+    if (gameId) {
+      params['game_id'] = gameId;
+    } else {
+      params['innings_number'] = inningsNumber;
+      params['pack_id'] = selectedPack.id;
 
-        if (appState.game.team1.id) {
-          params['id_team_1'] = appState.game.team1.id;
-        }
-
-        if (appState.game.team2.id) {
-          params['id_team_2'] = appState.game.team2.id;
-        }
+      if (appState.game.team1?.id) {
+        params['id_team_1'] = appState.game.team1.id;
       }
 
-      const response = await fetch(
-        API_URL + 'start?' + new URLSearchParams(params).toString()
-      );
-      const game = await response.json();
-      setValue(GAME_STORAGE_KEY, game.id);
-    };
+      if (appState.game.team2?.id) {
+        params['id_team_2'] = appState.game.team2.id;
+      }
+    }
 
-    fetchGame();
+    const response = await fetch(
+      API_URL + 'start?' + new URLSearchParams(params).toString()
+    );
+    const game = await response.json();
+    setValue(GAME_STORAGE_KEY, game.id);
   }, [appState, gameId, inningsNumber, selectedPack, setValue]);
 
   const onPlayingInningsSelect = useCallback((ev) => {
