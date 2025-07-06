@@ -87,7 +87,7 @@ function App() {
   }, [appState, gameId, inningsNumber, selectedPack, setValue]);
 
   const onPlayingInningsSelect = useCallback((ev) => {
-    setInningsNumber(ev.currentTarget.value);
+    setInningsNumber(parseInt(ev.currentTarget.value));
   }, []);
 
   const onPackSelect = useCallback(
