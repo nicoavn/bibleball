@@ -92,7 +92,9 @@ function App() {
 
   const onPackSelect = useCallback(
     (ev) => {
-      setSelectedPack(packs.find((pack) => pack.id === ev.currentTarget.value));
+      setSelectedPack(
+        packs.find((pack) => pack.id === parseInt(ev.currentTarget.value))
+      );
     },
     [packs]
   );
